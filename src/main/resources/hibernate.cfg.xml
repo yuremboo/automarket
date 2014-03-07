@@ -13,7 +13,7 @@
     <property name="show_sql">true</property>
     <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
     <property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
-    <property name="hbm2ddl.auto">create</property>
+    <property name="hbm2ddl.auto">update</property>
     <mapping class="com.automarket.entity.Goods"/>
     <mapping class="com.automarket.entity.Store"/>
   </session-factory>

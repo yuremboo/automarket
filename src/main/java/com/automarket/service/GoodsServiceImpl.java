@@ -23,8 +23,7 @@ public class GoodsServiceImpl implements GoodsService {
 
 	@Override
 	public List<Goods> getAllGoods() {
-		// TODO Auto-generated method stub
-		return null;
+		return goodsDAO.getAllGoods();
 	}
 
 	@Override
