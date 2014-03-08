@@ -1,5 +1,8 @@
 package com.automarket.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -7,6 +10,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -15,8 +19,8 @@ public class Goods {
 	private long id;
 	private String name;
 	private String description;
-	private int count;
-	private Store store;
+	private Set<Counter> counters = new HashSet<>();
+	private Set<CommodityCirculation> commodityCirculations = new HashSet<>();
 	
 	public Goods() {
 		
@@ -58,24 +62,25 @@ public class Goods {
 		this.description = description;
 	}
 	
-	@Column(name = "count", nullable = false)
-	public int getCount() {
-		return count;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "goods")
+	public Set<Counter> getCounters() {
+		return counters;
 	}
 	
-	public void setCount(int count) {
-		this.count = count;
+	public void setCounters(Set<Counter> counters) {
+		this.counters = counters;
 	}
 	
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
-	public Store getStore() {
-		return store;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "goods")
+	public Set<CommodityCirculation> getCommodityCirculations() {
+		return commodityCirculations;
 	}
 	
-	public void setStore(Store store) {
-		this.store = store;
+	public void setCommodityCirculations(
+			Set<CommodityCirculation> commodityCirculations) {
+		this.commodityCirculations = commodityCirculations;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Goods [id=" + id + ", name=" + name + ", description="
@@ -115,5 +120,7 @@ public class Goods {
 		} else if (!name.equals(other.name))
 			return false;
 		return true;
-	}	
+	}
+
+	
 }

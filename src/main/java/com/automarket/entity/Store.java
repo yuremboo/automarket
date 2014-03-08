@@ -1,5 +1,6 @@
 package com.automarket.entity;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -16,7 +17,8 @@ public class Store {
 	private int id;
 	private String name;
 	private String description;
-	private Set<Goods> goods;
+	private Set<Counter> counters = new HashSet<>();
+	private boolean isDefault;
 	
 	public Store() {
 		super();
@@ -52,18 +54,27 @@ public class Store {
 	}
 	
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "store")
-	public Set<Goods> getGoods() {
-		return goods;
+	public Set<Counter> getCounters() {
+		return counters;
 	}
 	
-	public void setGoods(Set<Goods> goods) {
-		this.goods = goods;
+	public void setCounters(Set<Counter> counters) {
+		this.counters = counters;
+	}
+	
+	@Column(name = "isDefault")
+	public boolean isDefault() {
+		return isDefault;
+	}
+	
+	public void setDefault(boolean isDefault) {
+		this.isDefault = isDefault;
 	}
 
 	@Override
 	public String toString() {
 		return "Store [id=" + id + ", name=" + name + ", description="
-				+ description + "]";
+				+ description + ", isDefault=" + isDefault + "]";
 	}
 
 	@Override
@@ -73,6 +84,7 @@ public class Store {
 		result = prime * result
 				+ ((description == null) ? 0 : description.hashCode());
 		result = prime * result + id;
+		result = prime * result + (isDefault ? 1231 : 1237);
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
@@ -93,6 +105,8 @@ public class Store {
 			return false;
 		if (id != other.id)
 			return false;
+		if (isDefault != other.isDefault)
+			return false;
 		if (name == null) {
 			if (other.name != null)
 				return false;
@@ -100,4 +114,6 @@ public class Store {
 			return false;
 		return true;
 	}
+
+	
 }

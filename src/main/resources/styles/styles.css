@@ -16,7 +16,7 @@
 }
 
 .button:hover{
-    -fx-base: #395bae;
+    -fx-background-color: linear-gradient(#2A5058, #61a2b1);
 }
 
 /* Component specific styles */
@@ -27,9 +27,10 @@
 }
 
 .hello-message {
-    -fx-text-fill: #AA0000;
-    -fx-font-weight: bold;
-    -fx-effect: dropshadow( gaussian , rgba(255,255,255,0.5) , 0,0,0,1 );
+   -fx-font-size: 16px;
+   -fx-font-family: "Arial";
+   -fx-fill: #818181;
+   -fx-effect: innershadow( three-pass-box , rgba(0,0,0,0.7) , 6, 0.0 , 0 , 2 );
 }
 
 .tabRootPane {

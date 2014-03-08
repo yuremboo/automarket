@@ -16,5 +16,7 @@
     <property name="hbm2ddl.auto">update</property>
     <mapping class="com.automarket.entity.Goods"/>
     <mapping class="com.automarket.entity.Store"/>
+    <mapping class="com.automarket.entity.Counter"/>
+    <mapping class="com.automarket.entity.CommodityCirculation"/>
   </session-factory>
 </hibernate-configuration>
