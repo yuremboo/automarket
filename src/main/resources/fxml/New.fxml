@@ -48,6 +48,7 @@
 														<RowConstraints maxHeight="63.0" minHeight="10.0" percentHeight="15.0" prefHeight="40.0" vgrow="SOMETIMES" />
 														<RowConstraints maxHeight="53.0" minHeight="0.0" percentHeight="15.0" prefHeight="53.0" vgrow="SOMETIMES" />
 														<RowConstraints maxHeight="74.0" minHeight="10.0" percentHeight="15.0" prefHeight="42.0" vgrow="SOMETIMES" />
+<RowConstraints maxHeight="1.7976931348623157E308" minHeight="56.0" prefHeight="56.0" vgrow="SOMETIMES" />
 													</rowConstraints>
 													<children>
 														<Label layoutX="14.0" layoutY="51.0" text="Товар">
@@ -55,7 +56,7 @@
 																<Insets left="5.0" />
 															</GridPane.margin>
 														</Label>
-														<TextField fx:id="goodsName" layoutX="106.0" layoutY="46.0" prefColumnCount="30" prefHeight="25.0" prefWidth="152.0" GridPane.columnIndex="1" />
+														<TextField fx:id="goodsName" layoutX="106.0" layoutY="46.0" onAction="#getInfo" prefColumnCount="30" prefHeight="25.0" prefWidth="152.0" GridPane.columnIndex="1" />
 														<Label layoutX="14.0" layoutY="96.0" text="Кількість" GridPane.rowIndex="1">
 															<GridPane.margin>
 																<Insets left="5.0" />
@@ -80,7 +81,7 @@
 															<cursor>
 																<Cursor fx:constant="HAND" />
 															</cursor>
-														</Button>
+														</Button><Label fx:id="infoLabel" prefHeight="133.0" prefWidth="162.0" textOverrun="CLIP" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 													</children>
 													<padding>
 														<Insets left="5.0" right="5.0" />

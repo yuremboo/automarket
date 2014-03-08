@@ -8,25 +8,26 @@ import java.util.List;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
+import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
+import com.automarket.entity.Store;
 
-public class GoodsDAOImpl implements GoodsDAO {
+public class StoreDAOImpl implements StoreDAO {
 	
-	static Logger log = LogManager.getLogger(GoodsDAOImpl.class);
+	static Logger log = LogManager.getLogger(StoreDAOImpl.class);
 
 	@Override
-	public void addGoods(Goods goods) {
+	public void addStore(Store store) {
 		Session session = null;
 		try {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
-			session.save(goods);
+			session.save(store);
 			session.getTransaction().commit();
-			log.info("Added new goods: " + goods);
+			log.info("Added new store: " + store);
 		} catch (Exception e) {
 			log.error("Error insert " + e);
 		} finally {
@@ -38,42 +39,41 @@ public class GoodsDAOImpl implements GoodsDAO {
 
 	@Override
 	public void remove(int id) {
-		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
-	public List<Goods> getAllGoods() {
+	public List<Store> getAllStores() {
 		Session session = null;
-		List<Goods> goods = new ArrayList<>();
+		List<Store> stores = new ArrayList<>();
 		try {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
-			Criteria criteria = session.createCriteria(Goods.class);
-			goods.addAll(criteria.list());
+			Criteria criteria = session.createCriteria(Store.class);
+			stores.addAll(criteria.list());
 			session.getTransaction().commit();
-			log.info("Added new goods: " + goods);
+			log.info("Get all stores: " + stores);
 		} catch (Exception e) {
-			log.error("Error insert " + e);
+			log.error("Error get all stores " + e);
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
 			}
 		}
-		return goods;
+		return stores;
 	}
 
 	@Override
-	public Goods getGoodsByName(String name) {
+	public Store getStoreByName(String name) {
 		Session session = null;
-		Goods goods = new Goods();
+		Store store = new Store();
 		try {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
-			Criteria criteria = session.createCriteria(Goods.class);
+			Criteria criteria = session.createCriteria(Store.class);
 			criteria.add(Restrictions.or(Restrictions.like("name", name).ignoreCase()));
-			goods = (Goods) criteria.list().get(0);
-			log.info("" + goods);
+			store = (Store) criteria.list().get(0);
+			log.info("Get store " + store);
 		} catch (Exception e) {
 			log.error("Error get by name: " + e);
 		} finally {
@@ -81,7 +81,29 @@ public class GoodsDAOImpl implements GoodsDAO {
 				session.close();
 			}
 		}
-		return goods;
+		return store;
+	}
+	
+	@Override
+	public Store getDefault() {
+		Session session = null;
+		Store store = new Store();
+		try {
+			session = getSessionFactory().openSession();
+			session.beginTransaction();
+			Criteria criteria = session.createCriteria(Store.class)
+			        .add(Restrictions.eq("isDefault", true));
+			store = (Store) criteria.list().get(0);
+			session.getTransaction().commit();
+			log.info("Get default: " + store);
+		} catch (Exception e) {
+			log.error(e);
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+		return store;
 	}
 
 }

@@ -25,8 +25,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.automarket.entity.Goods;
+import com.automarket.entity.Store;
+import com.automarket.service.CounterService;
+import com.automarket.service.CounterServiceImpl;
 import com.automarket.service.GoodsService;
 import com.automarket.service.GoodsServiceImpl;
+import com.automarket.service.StoreService;
+import com.automarket.service.StoreServiceImpl;
 
 public class MainController
 {
@@ -34,7 +39,10 @@ public class MainController
 
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
+    @FXML private TextField goodsName;
     @FXML private Label messageLabel;
+    @FXML private Label infoLabel;
+    @FXML private TextField goodsCount;
     @FXML private TableView<Goods> goodsTable;
     @FXML private TableColumn<Goods, Long> goodsColumnId;
     @FXML private TableColumn<Goods, String> goodsColumnName;
@@ -43,6 +51,8 @@ public class MainController
     @FXML private TableColumn<Goods, Integer> goodsColumnCount;
     
     private GoodsService goodsService = new GoodsServiceImpl();
+    private CounterService counterService = new CounterServiceImpl();
+    private StoreService storeService = new StoreServiceImpl();
     private ObservableList<Goods> goodsList=FXCollections.observableArrayList();
     
 
@@ -99,7 +109,25 @@ public class MainController
 	}
     
     @FXML protected void saleGoods() {
-    	System.out.println("Sale...");
+    	Store store = storeService.getDefault();
+    	int c = 0;
+    	log.debug("Sale...");
+    	String goodsNameStr = goodsName.getText();
+    	int count = Integer.parseInt(goodsCount.getText());
+    	Goods goods = goodsService.getGoodsByName(goodsNameStr);
+    	if (goods != null && goods.getId() != 0) {
+    		infoLabel.setText(goods.toString());
+    		c = counterService.sale(goods, store, count);
+    	} else {
+    		infoLabel.setText("Товар не знайдено!");
+		}
+    	if (c > 0) {
+    		goodsName.setText("");
+    		goodsCount.setText("");
+    		infoLabel.setText("Продано: " + goodsNameStr + " Кількість: " + count);
+    	} else {
+    		infoLabel.setText("Виникла помилка при продажі! Зверніться до розробників!");
+		}
     }
     
     @FXML protected void cancelSale() {
@@ -141,6 +169,16 @@ public class MainController
     
     @FXML protected void containerSelected() {
     	System.out.println("Containers...");
+    }
+    
+    @FXML protected void getInfo() {
+    	String goodsNameStr = goodsName.getText();
+    	Goods goods = goodsService.getGoodsByName(goodsNameStr);
+    	if (goods != null) {
+    		infoLabel.setText(goods.toString());
+    	} else {
+    		infoLabel.setText("Товар не знайдено!");
+		}
     }
 
 }
