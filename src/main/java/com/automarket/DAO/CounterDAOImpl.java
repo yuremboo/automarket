@@ -102,13 +102,17 @@ public class CounterDAOImpl implements CounterDAO {
 			counter = (Counter) criteria.list().get(0);
 			session.getTransaction().commit();
 			log.info("Get counters: " + counter);
-			session.beginTransaction();
-			counter.setCount(counter.getCount() - count);
-			result = session.createQuery(hqlUpdate).setInteger("newCount", counter.getCount())
-										.setLong("goods", goods.getId())
-										.setInteger("store", store.getId()).executeUpdate();
-			session.getTransaction().commit();
-			log.info("Sale: " + counter);
+			if (count <= counter.getCount()) {
+				session.beginTransaction();
+				counter.setCount(counter.getCount() - count);
+				result = session.createQuery(hqlUpdate).setInteger("newCount", counter.getCount())
+											.setLong("goods", goods.getId())
+											.setInteger("store", store.getId()).executeUpdate();
+				session.getTransaction().commit();
+				log.info("Sale: " + counter);
+			} else {
+				result = -1;
+			}
 		} catch (Exception e) {
 			log.error(e);
 		} finally {

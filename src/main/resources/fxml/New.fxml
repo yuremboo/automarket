@@ -23,10 +23,10 @@
 													<content>
 														<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="main-panel">
 															<children>
-																<TableView prefHeight="343.0" prefWidth="313.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+																<TableView fx:id="commodityCirculationTable" prefHeight="343.0" prefWidth="313.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 																	<columns>
-																		<TableColumn prefWidth="220.00000607967377" text="Товар" />
-																		<TableColumn prefWidth="136.00003051757812" text="Кількість" />
+																		<TableColumn fx:id="commodityCirculationColumnName" prefWidth="220.00000607967377" text="Товар" />
+																		<TableColumn fx:id="commodityCirculationColumnCount" prefWidth="136.00003051757812" text="Кількість" />
 																	</columns>
 																</TableView>
 															</children>
