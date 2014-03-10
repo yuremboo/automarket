@@ -7,6 +7,13 @@
     -fx-effect: dropshadow( gaussian , rgba(255,255,255,0.5) , 0,0,0,1 );
 }
 
+.errorlabel {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: red;
+    -fx-effect: dropshadow( gaussian , rgba(255,255,255,0.5) , 0,0,0,1 );
+}
+
 .button {
     -fx-text-fill: white;
     -fx-font-family: "Arial Narrow";
@@ -38,3 +45,6 @@
 	-fx-width: 100%;
 }
 
+.table-column {
+	-fx-width: auto;
+}

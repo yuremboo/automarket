@@ -99,8 +99,10 @@ public class CounterDAOImpl implements CounterDAO {
 			Criteria criteria = session.createCriteria(Counter.class)
 			        .add(Restrictions.eq("goods.id", goods.getId()))
 			        .add(Restrictions.eq("store.id", store.getId()));
+			result = -1;
 			counter = (Counter) criteria.list().get(0);
 			session.getTransaction().commit();
+			result = 0;
 			log.info("Get counters: " + counter);
 			if (count <= counter.getCount()) {
 				session.beginTransaction();

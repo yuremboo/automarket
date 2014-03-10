@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name="COMMODITY_CIRCULATION")
@@ -19,6 +20,7 @@ public class CommodityCirculation {
 	private Goods goods;
 	private int count;
 	private boolean isSale;
+	private String goodsName;
 	
 	public CommodityCirculation() {
 		super();
@@ -70,6 +72,13 @@ public class CommodityCirculation {
 	}
 	public void setSale(boolean isSale) {
 		this.isSale = isSale;
+	}
+	@Transient
+	public String getGoodsName() {
+		return goods.getName();
+	}
+	public void setGoodsName(String goodsName) {
+		this.goodsName = goods.getName();
 	}
 	@Override
 	public String toString() {

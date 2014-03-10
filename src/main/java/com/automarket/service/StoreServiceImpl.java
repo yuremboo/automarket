@@ -1,5 +1,6 @@
 package com.automarket.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.automarket.DAO.StoreDAO;
@@ -33,6 +34,17 @@ public class StoreServiceImpl implements StoreService {
 	@Override
 	public Store getDefault() {
 		return storeDAO.getDefault();
+	}
+	
+	@Override
+	public List<String> getAllStoresNames() {
+		List<Store> stores = new ArrayList<>();
+		stores.addAll(storeDAO.getAllStores());
+		List<String> storeNames = new ArrayList<>();
+		for (Store store : stores) {
+			storeNames.add(store.getName());
+		}
+		return storeNames;
 	}
 
 }
