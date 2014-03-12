@@ -42,7 +42,12 @@ public class CounterServiceImpl implements CounterService {
 		return null;
 	}
 
-	@Override
+    @Override
+    public List<Counter> getCountersListByStore(Store store) {
+        return counterDAO.getCountersListByStore(store);
+    }
+
+    @Override
 	public int sale(Goods goods, Store store, int count) {
 		return counterDAO.sale(goods, store, count);
 	}

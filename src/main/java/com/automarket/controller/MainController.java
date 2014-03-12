@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.automarket.entity.Counter;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -86,6 +87,18 @@ public class MainController
 	private TableColumn<Goods, Integer> goodsColumnCount;
 	@FXML
 	private ChoiceBox<String> storeChoise;
+    @FXML
+    private TableView<Counter> counterTableView;
+    @FXML
+    private TableColumn<Counter, Long> goodsCounterColumnId;
+    @FXML
+    private TableColumn<Counter, String> goodsCounterColumnName;
+    @FXML
+    private TableColumn<Counter, String> goodsCounterColumnDescription;
+    @FXML
+    private TableColumn<Counter, String> goodsCounterColumnContainer;
+    @FXML
+    private TableColumn<Counter, Integer> goodsCounterColumnC;
     
 	private GoodsService goodsService = new GoodsServiceImpl();
 	private CounterService counterService = new CounterServiceImpl();
@@ -93,6 +106,8 @@ public class MainController
 	private CommodityCirculationsService circulationsService = new CommodityCirculationsServiceImpl();
 	private ObservableList<Goods> goodsList = FXCollections
 			.observableArrayList();
+    private ObservableList<Counter> goodsFullList = FXCollections
+            .observableArrayList();
 	private ObservableList<CommodityCirculation> circulationsList = FXCollections
 			.observableArrayList();
 	private ObservableList<String> storesList = FXCollections.observableArrayList();
@@ -100,7 +115,6 @@ public class MainController
 	public void setMainApp(MainApp mainApp) {
 	    this.mainApp = mainApp;
 	}
-	
 	public void setDialogStage(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 	}
@@ -203,7 +217,23 @@ public class MainController
     }
     
     @FXML protected void containerSelected() {
-    	System.out.println("Containers...");
+    	log.debug("Containers...");
+        Store store = storeService.getDefault();
+        if(!goodsFullList.isEmpty())
+            goodsFullList.clear();
+        List<Counter> counters = new ArrayList<>();
+        counters.addAll(counterService.getCountersListByStore(store));
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                goodsCounterColumnId.setCellValueFactory(new PropertyValueFactory<Counter, Long>("id"));
+                goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<Counter, String>("goodsName"));
+//                goodsCounterColumnDescription.setCellValueFactory(new PropertyValueFactory<Counter, String>("description"));
+                goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<Counter, Integer>("count"));
+            }
+        });
+        goodsFullList = FXCollections.observableList(counters);
+        counterTableView.setItems(goodsFullList);
     }
     
     @FXML protected void getInfo() {
@@ -247,17 +277,19 @@ public class MainController
     	ExtensionFilter filter = new ExtensionFilter("MS Office Excell files", "*.xls", "*.xlsx");
     	fileChooser.getExtensionFilters().add(filter);
     	File file = fileChooser.showOpenDialog(primaryStage);
-    	Goods goods = new Goods();
+    	List<Goods> goodsList = new ArrayList<>();
         if (file != null) {
         	Map<Integer, List<Object>> data = new HashMap<>(WorkWithExcel.readFromExcell(file));
         	for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
+        		Goods goods = new Goods();
         		goods.setName((String) entry.getValue().get(0));
         		boolean b = entry.getValue().get(1) != null ? true:false;
         		if (b) {
         			goods.setDescription((String) entry.getValue().get(1));
         		}
-        		goodsService.addGoods(goods);
+        		goodsList.add(goods);
         	}
+        	goodsService.addGoodsList(goodsList);
         }
     }
 

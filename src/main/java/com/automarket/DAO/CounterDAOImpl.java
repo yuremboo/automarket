@@ -86,6 +86,28 @@ public class CounterDAOImpl implements CounterDAO {
 		}
 		return counters;
 	}
+
+    @Override
+    public List<Counter> getCountersListByStore(Store store) {
+        Session session = null;
+        List<Counter> counters = new ArrayList<>();
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            Criteria criteria = session.createCriteria(Counter.class);
+            criteria.add(Restrictions.eq("store.id", store.getId()));
+            counters.addAll(criteria.list());
+            session.getTransaction().commit();
+            log.info("Get all counters by store: " + counters);
+        } catch (Exception e) {
+            log.error("Error get " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+        return counters;
+    }
 	
 	@Override
 	public int sale(Goods goods, Store store, int count) {

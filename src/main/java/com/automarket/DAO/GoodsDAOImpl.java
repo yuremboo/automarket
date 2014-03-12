@@ -35,6 +35,30 @@ public class GoodsDAOImpl implements GoodsDAO {
 			}
 		}
 	}
+	
+	@Override
+	public void addGoodsList(List<Goods> goods) {
+		Session session = null;
+		try {
+			session = getSessionFactory().openSession();
+			session.beginTransaction();
+			for (Goods good : goods) {
+				session.save(good);
+				if (session.isDirty()) {
+					session.flush();
+					session.clear();
+				}
+			}
+			session.getTransaction().commit();
+			log.info("Added new goods: " + goods);
+		} catch (Exception e) {
+			log.error("Error insert " + e);
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+	}
 
 	@Override
 	public void remove(int id) {

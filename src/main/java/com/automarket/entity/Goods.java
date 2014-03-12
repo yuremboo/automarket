@@ -44,7 +44,7 @@ public class Goods {
 		this.id = id;
 	}
 	
-	@Column(name = "name", nullable = false)
+	@Column(name = "name", nullable = false, unique = true)
 	public String getName() {
 		return name;
 	}

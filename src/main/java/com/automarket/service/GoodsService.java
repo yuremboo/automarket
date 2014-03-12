@@ -9,4 +9,5 @@ public interface GoodsService {
 	void remove(int id);
 	List<Goods> getAllGoods();
 	Goods getGoodsByName(String name);
+	void addGoodsList(List<Goods> goods);
 }

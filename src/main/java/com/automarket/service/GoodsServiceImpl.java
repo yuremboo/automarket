@@ -14,6 +14,11 @@ public class GoodsServiceImpl implements GoodsService {
 	public void addGoods(Goods goods) {
 		goodsDAO.addGoods(goods);
 	}
+	
+	@Override
+	public void addGoodsList(List<Goods> goods) {
+		goodsDAO.addGoodsList(goods);
+	}
 
 	@Override
 	public void remove(int id) {

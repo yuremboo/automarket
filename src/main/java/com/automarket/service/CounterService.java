@@ -12,5 +12,6 @@ public interface CounterService {
 	void updateCounter(Counter counter);
 	Counter getCounterById(int id);
 	List<Counter> getCountersList();
+    List<Counter> getCountersListByStore(Store store);
 	int sale(Goods goods, Store store, int count);
 }

@@ -7,8 +7,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "COUNTER")
@@ -16,6 +16,8 @@ public class Counter {
 	private int id;
 	private Goods goods;
 	private Store store;
+	private String goodsName;
+	private String storeName;
 	private int count;
 	
 	/**
@@ -36,6 +38,8 @@ public class Counter {
 		this.goods = goods;
 		this.store = store;
 		this.count = count;
+		this.goodsName = goods.getName();
+		this.storeName = store.getName();
 	}
 
 	@Id
@@ -56,6 +60,7 @@ public class Counter {
 
 	public void setGoods(Goods goods) {
 		this.goods = goods;
+		this.goodsName = goods.getName();
 	}
 
 	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
@@ -65,6 +70,7 @@ public class Counter {
 
 	public void setStore(Store store) {
 		this.store = store;
+		this.storeName = store.getName();
 	}
 
 	@Column(name = "goodsCount")
@@ -74,6 +80,24 @@ public class Counter {
 
 	public void setCount(int count) {
 		this.count = count;
+	}
+	
+	@Transient
+	public String getGoodsName() {
+		return goodsName;
+	}
+	
+	public void setGoodsName(String goodsName) {
+		this.goodsName = goodsName;
+	}
+	
+	@Transient
+	public String getStoreName() {
+		return storeName;
+	}
+	
+	public void setStoreName(String storeName) {
+		this.storeName = storeName;
 	}
 
 	@Override

@@ -12,5 +12,6 @@ public interface CounterDAO {
 	void updateCounter(Counter counter);
 	Counter getCounterById(int id);
 	List<Counter> getCountersList();
-	int sale(Goods goods, Store store, int count);
+    List<Counter> getCountersListByStore(Store store);
+    int sale(Goods goods, Store store, int count);
 }

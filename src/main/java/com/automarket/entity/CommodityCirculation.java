@@ -60,6 +60,7 @@ public class CommodityCirculation {
 	}
 	public void setGoods(Goods goods) {
 		this.goods = goods;
+		this.goodsName = goods.getName();
 	}
 	@Column(name = "goodsCount")
 	public int getCount() {
@@ -81,20 +82,21 @@ public class CommodityCirculation {
 	}
 	public void setStore(Store store) {
 		this.store = store;
+		this.storeName = store.getName();
 	}
 	@Transient
 	public String getGoodsName() {
-		return goods.getName();
+		return goodsName;
 	}
 	public void setGoodsName(String goodsName) {
-		this.goodsName = goods.getName();
+		this.goodsName = goodsName;
 	}
 	@Transient
 	public String getStoreName() {
-		return store.getName();
+		return storeName;
 	}
 	public void setStoreName(String storeName) {
-		this.storeName = store.getName();
+		this.storeName = storeName;
 	}
 	@Override
 	public String toString() {

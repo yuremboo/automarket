@@ -6,5 +6,7 @@
 *.ear
 /target
 /.settings
+/.idea
 .classpath
 .project
+AutoMarketFX.iml
