@@ -18,6 +18,7 @@ public class Store {
 	private String name;
 	private String description;
 	private Set<Counter> counters = new HashSet<>();
+	private Set<CommodityCirculation> circulations = new HashSet<>();
 	private boolean isDefault;
 	
 	public Store() {
@@ -60,6 +61,15 @@ public class Store {
 	
 	public void setCounters(Set<Counter> counters) {
 		this.counters = counters;
+	}
+	
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "store")
+	public Set<CommodityCirculation> getCirculations() {
+		return circulations;
+	}
+	
+	public void setCirculations(Set<CommodityCirculation> circulations) {
+		this.circulations = circulations;
 	}
 	
 	@Column(name = "isDefault")

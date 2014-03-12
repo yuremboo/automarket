@@ -1,9 +1,13 @@
 package com.automarket.controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -19,6 +23,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
 import org.apache.commons.lang.StringUtils;
@@ -36,13 +42,15 @@ import com.automarket.service.GoodsService;
 import com.automarket.service.GoodsServiceImpl;
 import com.automarket.service.StoreService;
 import com.automarket.service.StoreServiceImpl;
-import com.automarket.util.Validator;
+import com.automarket.utils.Validator;
+import com.automarket.utils.WorkWithExcel;
 
 public class MainController
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
     MainApp mainApp;
+    Stage primaryStage;
     
 	@FXML
 	private TextField goodsName;
@@ -64,6 +72,8 @@ public class MainController
 	private TableColumn<CommodityCirculation, String> commodityCirculationColumnName;
 	@FXML
 	private TableColumn<CommodityCirculation, Integer> commodityCirculationColumnCount;
+	@FXML
+	private TableColumn<CommodityCirculation, String> commodityCirculationColumnContainer;
 	@FXML
 	private TableColumn<Goods, Long> goodsColumnId;
 	@FXML
@@ -89,6 +99,10 @@ public class MainController
 	
 	public void setMainApp(MainApp mainApp) {
 	    this.mainApp = mainApp;
+	}
+	
+	public void setDialogStage(Stage primaryStage) {
+		this.primaryStage = primaryStage;
 	}
     
     @FXML public void showAddStage() {
@@ -126,6 +140,7 @@ public class MainController
     	Goods goods = goodsService.getGoodsByName(goodsNameStr);
     	CommodityCirculation commodityCirculation = new CommodityCirculation(0, new Date(), goods, count);
     	commodityCirculation.setSale(true);
+    	commodityCirculation.setStore(store);
     	log.debug("Sale " + goods + " " + store);
     	if (goods != null && goods.getId() != 0) {
     		infoLabel.setText(goods.toString());
@@ -208,11 +223,11 @@ public class MainController
 			@Override
 			public void run() {
 				commodityCirculationColumnName
-						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>(
-								"goodsName"));
+						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("goodsName"));
 				commodityCirculationColumnCount
-						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, Integer>(
-								"count"));
+						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, Integer>("count"));
+				commodityCirculationColumnContainer
+						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("storeName"));
 			}
 		});
 		circulationsList = FXCollections.observableList(circulations);
@@ -226,5 +241,26 @@ public class MainController
     @FXML protected void clickMonthSales() {
     	commodityList();
     }
+    
+    @FXML protected void onLoad() {
+    	FileChooser fileChooser = new FileChooser();
+    	ExtensionFilter filter = new ExtensionFilter("MS Office Excell files", "*.xls", "*.xlsx");
+    	fileChooser.getExtensionFilters().add(filter);
+    	File file = fileChooser.showOpenDialog(primaryStage);
+    	Goods goods = new Goods();
+        if (file != null) {
+        	Map<Integer, List<Object>> data = new HashMap<>(WorkWithExcel.readFromExcell(file));
+        	for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
+        		goods.setName((String) entry.getValue().get(0));
+        		boolean b = entry.getValue().get(1) != null ? true:false;
+        		if (b) {
+        			goods.setDescription((String) entry.getValue().get(1));
+        		}
+        		goodsService.addGoods(goods);
+        	}
+        }
+    }
+
+	
 
 }

@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.automarket.entity.Goods;
 import com.automarket.service.GoodsService;
 import com.automarket.service.GoodsServiceImpl;
-import com.automarket.util.Validator;
+import com.automarket.utils.Validator;
 
 public class GoodsEditDialogController {
 	private static final Logger log = LoggerFactory.getLogger(GoodsEditDialogController.class);

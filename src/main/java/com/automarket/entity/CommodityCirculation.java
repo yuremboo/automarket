@@ -20,7 +20,9 @@ public class CommodityCirculation {
 	private Goods goods;
 	private int count;
 	private boolean isSale;
+	private Store store;
 	private String goodsName;
+	private String storeName;
 	
 	public CommodityCirculation() {
 		super();
@@ -73,12 +75,26 @@ public class CommodityCirculation {
 	public void setSale(boolean isSale) {
 		this.isSale = isSale;
 	}
+	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+	public Store getStore() {
+		return store;
+	}
+	public void setStore(Store store) {
+		this.store = store;
+	}
 	@Transient
 	public String getGoodsName() {
 		return goods.getName();
 	}
 	public void setGoodsName(String goodsName) {
 		this.goodsName = goods.getName();
+	}
+	@Transient
+	public String getStoreName() {
+		return store.getName();
+	}
+	public void setStoreName(String storeName) {
+		this.storeName = store.getName();
 	}
 	@Override
 	public String toString() {

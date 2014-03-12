@@ -41,6 +41,7 @@ public class MainApp extends Application {
         this.primaryStage = primaryStage;
         MainController controller = loader.getController();
         controller.setMainApp(this);
+        controller.setDialogStage(primaryStage);
         primaryStage.show();
     }
     

@@ -1,4 +1,4 @@
-package com.automarket.util;
+package com.automarket.utils;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
