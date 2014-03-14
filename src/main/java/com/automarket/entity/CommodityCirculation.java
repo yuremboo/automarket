@@ -19,7 +19,7 @@ public class CommodityCirculation {
 	private Date date;
 	private Goods goods;
 	private int count;
-	private boolean isSale;
+	private boolean sale;
 	private Store store;
 	private String goodsName;
 	private String storeName;
@@ -69,14 +69,17 @@ public class CommodityCirculation {
 	public void setCount(int count) {
 		this.count = count;
 	}
-	@Column(name = "isSale")
-	public boolean isSale() {
-		return isSale;
-	}
-	public void setSale(boolean isSale) {
-		this.isSale = isSale;
-	}
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+
+    @Column(name = "isSale")
+    public boolean isSale() {
+        return sale;
+    }
+
+    public void setSale(boolean sale) {
+        this.sale = sale;
+    }
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
 	public Store getStore() {
 		return store;
 	}
@@ -140,6 +143,7 @@ public class CommodityCirculation {
 			return false;
 		return true;
 	}
-	
-		
+
+
+
 }

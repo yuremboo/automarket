@@ -2,14 +2,11 @@ package com.automarket.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import com.automarket.entity.Counter;
+import eu.schudt.javafx.controls.calendar.DatePicker;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -20,12 +17,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
@@ -85,10 +80,6 @@ public class MainController
 	@FXML
 	private TableColumn<Goods, String> goodsColumnDescription;
 	@FXML
-	private TableColumn<Goods, String> goodsColumnContainer;
-	@FXML
-	private TableColumn<Goods, Integer> goodsColumnCount;
-	@FXML
 	private ChoiceBox<String> storeChoise;
     @FXML
     private ChoiceBox<String> containerChoice;
@@ -99,11 +90,17 @@ public class MainController
     @FXML
     private TableColumn<Counter, String> goodsCounterColumnName;
     @FXML
-    private TableColumn<Counter, String> goodsCounterColumnDescription;
-    @FXML
     private TableColumn<Counter, String> goodsCounterColumnContainer;
     @FXML
     private TableColumn<Counter, Integer> goodsCounterColumnC;
+    @FXML
+    private ChoiceBox<String> storeFilterChoice;
+    @FXML
+    private ChoiceBox<String> goodsFilterChoice;
+    @FXML
+    private CheckBox incomeOnlyCheck;
+    @FXML
+    private CheckBox salesOnlyCheck;
     
 	private GoodsService goodsService = new GoodsServiceImpl();
 	private CounterService counterService = new CounterServiceImpl();
@@ -116,6 +113,12 @@ public class MainController
 	private ObservableList<CommodityCirculation> circulationsList = FXCollections
 			.observableArrayList();
 	private ObservableList<String> storesList = FXCollections.observableArrayList();
+    @FXML
+    private VBox filterVBox;
+    private Label fromLabel = new Label();
+    private Label toLabel = new Label();
+    private DatePicker fromDatePicker;
+    private DatePicker toDatePicker;
 	
 	public void setMainApp(MainApp mainApp) {
 	    this.mainApp = mainApp;
@@ -126,12 +129,35 @@ public class MainController
 
     @FXML
     private void initialize() {
+        fromLabel.setText("З");
+        toLabel.setText("По");
+        fromDatePicker = new DatePicker(Locale.UK);
+        fromDatePicker.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        fromDatePicker.getCalendarView().todayButtonTextProperty().set("Today");
+        fromDatePicker.getCalendarView().setShowWeeks(false);
+        fromDatePicker.getStylesheets().add("/styles/DatePicker.css");
+
+        toDatePicker = new DatePicker(Locale.UK);
+        toDatePicker.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        toDatePicker.getCalendarView().todayButtonTextProperty().set("Today");
+        toDatePicker.getCalendarView().setShowWeeks(false);
+        toDatePicker.getStylesheets().add("/styles/DatePicker.css");
+
+        filterVBox.getChildren().add(fromLabel);
+        filterVBox.getChildren().add(fromDatePicker);
+        filterVBox.getChildren().add(toLabel);
+        filterVBox.getChildren().add(toDatePicker);
+
+
         defaultStore = storeService.getDefault();
         storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
         storeChoise.setItems(storesList);
         storeChoise.setValue(defaultStore.getName());
         containerChoice.setItems(storesList);
         containerChoice.setValue(defaultStore.getName());
+
+        storeFilterChoice.setItems(storesList);
+        goodsFilterChoice.setItems(FXCollections.observableArrayList(goodsService.getAllGoodsNames()));
 
         containerChoice.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
@@ -231,11 +257,17 @@ public class MainController
     }
 
     private void fillContainerTable(String storeName) {
-        Store store = storeService.getStoreByName(storeName);
         if(!goodsFullList.isEmpty())
             goodsFullList.clear();
         List<Counter> counters = new ArrayList<>();
-        counters.addAll(counterService.getCountersListByStore(store));
+        if (!storeName.equals("Всі")) {
+            Store store = storeService.getStoreByName(storeName);
+            counters.addAll(counterService.getCountersListByStore(store));
+        } else {
+            counters.addAll(counterService.getCountersList());
+        }
+
+
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
@@ -261,7 +293,7 @@ public class MainController
     
     public void commodityList() {
 		List<CommodityCirculation> circulations = new ArrayList<>();
-		circulations.addAll(circulationsService.commodityCirculationsByDay());
+		circulations.addAll(circulationsService.commodityCirculationsByDay(true));
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
@@ -342,6 +374,41 @@ public class MainController
     }
 
     @FXML protected void addContainer() {
+        Store store = new Store();
+        boolean okClicked = mainApp.showStoreAddDialog(store);
+        if (okClicked) {
+            storeService.addStore(store);
+        }
+    }
 
+    @FXML protected void setAsDefault() {
+        defaultStore.setDefaultStore(false);
+        Store newDefault = storeService.getStoreByName(containerChoice.getValue());
+        newDefault.setDefaultStore(true);
+        storeService.changeDefault(defaultStore, newDefault);
+        defaultStore = newDefault;
+        Dialogs.showInformationDialog(primaryStage, "Контейнер встановлено по замовчуванню");
+    }
+
+    @FXML protected void createReport() {
+        Date fromDate = fromDatePicker.getSelectedDate();
+        Date toDate = toDatePicker.getSelectedDate();
+        String storeName = storeFilterChoice.getValue();
+        String goodsName = goodsFilterChoice.getValue();
+
+        Store filterStore = storeName!=null?storeService.getStoreByName(storeName):null;
+        Goods filterGoods = goodsName!=null?goodsService.getGoodsByName(goodsName):null;
+        List<CommodityCirculation> commodityCirculationsReport = new ArrayList<>();
+        if (incomeOnlyCheck.isSelected() && !salesOnlyCheck.isSelected()) {
+            commodityCirculationsReport.addAll(circulationsService
+                    .commodityCirculationsByTerm(fromDate, toDate, filterStore, filterGoods, false));
+        } else if (!incomeOnlyCheck.isSelected() && salesOnlyCheck.isSelected()) {
+            commodityCirculationsReport.addAll(circulationsService
+                    .commodityCirculationsByTerm(fromDate, toDate, filterStore, filterGoods, true));
+        } else {
+            commodityCirculationsReport.addAll(circulationsService
+                    .commodityCirculationsByTerm(fromDate, toDate, filterStore, filterGoods));
+        }
+        System.out.println("ds");
     }
 }

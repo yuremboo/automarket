@@ -41,8 +41,7 @@ public class CounterServiceImpl implements CounterService {
 
     @Override
 	public List<Counter> getCountersList() {
-		// TODO Auto-generated method stub
-		return null;
+		return counterDAO.getCountersList();
 	}
 
     @Override

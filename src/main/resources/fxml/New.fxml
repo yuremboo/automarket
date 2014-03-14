@@ -6,6 +6,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.effect.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
 <AnchorPane id="rootPane" prefHeight="456.0" prefWidth="662.0" styleClass="main-panel" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.automarket.controller.MainController">
 	<children><MenuBar AnchorPane.bottomAnchor="427.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -150,7 +151,7 @@
 											<children>
 												<Button layoutY="363.0" mnemonicParsing="false" text="Редагувати" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="100.0" />
 												<Button layoutX="14.0" layoutY="363.0" mnemonicParsing="false" onAction="#showAddGoodsStage" text="Додати" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" />
-												<Button mnemonicParsing="false" onAction="#onLoadCounters" text="Завантажити" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="210.0" />
+												<Button mnemonicParsing="false" onAction="#onLoadCounters" text="Імпорт" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="210.0" /><Button mnemonicParsing="false" text="Експорт" />
 											</children>
 											<padding>
 												<Insets top="10.0" />
@@ -179,7 +180,7 @@
 												<ChoiceBox fx:id="containerChoice" prefWidth="150.0">
 <HBox.margin>
 <Insets left="10.0" />
-</HBox.margin></ChoiceBox>
+</HBox.margin></ChoiceBox><Button mnemonicParsing="false" onAction="#addContainer" text="Додати контейнер" /><Button mnemonicParsing="false" onAction="#setAsDefault" text="За замовчуванням" />
 											</children>
 											<padding>
 												<Insets bottom="10.0" top="10.0" />
@@ -244,6 +245,52 @@
 						</AnchorPane>
 					</content>
 				</Tab>
+<Tab onSelectionChanged="#goodsSelected" text="Звіти">
+<content>
+<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="main-panel">
+<children><BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<left><VBox fx:id="filterVBox" prefHeight="393.0" prefWidth="190.0" spacing="10.0" BorderPane.alignment="CENTER">
+<children><Label alignment="CENTER" contentDisplay="TOP" prefHeight="15.0" prefWidth="153.0" text="Фільтр">
+<font>
+<Font name="System Bold" size="13.0" />
+</font></Label><CheckBox fx:id="incomeOnlyCheck" mnemonicParsing="false" text="Тільки надходження" /><CheckBox fx:id="salesOnlyCheck" mnemonicParsing="false" text="Тільки продажі" /><Label alignment="CENTER" contentDisplay="CENTER" prefHeight="16.0" prefWidth="182.0" text="Контейнер">
+<font>
+<Font name="System Bold" size="13.0" />
+</font></Label><ChoiceBox fx:id="storeFilterChoice" prefHeight="25.0" prefWidth="168.0" /><Label alignment="CENTER" contentDisplay="CENTER" prefHeight="16.0" prefWidth="182.0" text="Товар">
+<font>
+<Font name="System Bold" size="13.0" />
+</font>
+</Label><ChoiceBox fx:id="goodsFilterChoice" prefHeight="25.0" prefWidth="168.0" /><Label alignment="CENTER" contentDisplay="CENTER" prefHeight="16.0" prefWidth="182.0" text="Термін">
+<font>
+<Font name="System Bold" size="13.0" />
+</font>
+</Label>
+</children>
+<padding>
+<Insets left="5.0" top="10.0" />
+</padding></VBox>
+</left>
+<center><TableView fx:id="reportTableView" prefHeight="393.0" prefWidth="489.0" BorderPane.alignment="CENTER">
+  <columns>
+    <TableColumn fx:id="goodsReportColumn" prefWidth="177.0" text="Товар" />
+    <TableColumn fx:id="countReportColumn" prefWidth="161.0" text="Кількість" /><TableColumn fx:id="storeReportColumn" prefWidth="131.0" text="Контейнер" /><TableColumn fx:id="dateReportColumn" prefWidth="106.0" text="Дата" /><TableColumn fx:id="saleReportColumn" prefWidth="60.0" text="Продаж" />
+  </columns>
+<columnResizePolicy>
+<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+</columnResizePolicy>
+</TableView>
+</center>
+<bottom><HBox spacing="10.0" BorderPane.alignment="CENTER">
+<children><Button mnemonicParsing="false" onAction="#createReport" text="Сформувати" /><Button mnemonicParsing="false" text="Експорт" />
+</children>
+<padding>
+<Insets left="5.0" />
+</padding></HBox>
+</bottom></BorderPane>
+</children>
+</AnchorPane>
+</content>
+</Tab>
 			</tabs>
 		</TabPane>
 	</children>

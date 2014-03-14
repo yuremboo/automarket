@@ -19,7 +19,7 @@ public class Store {
 	private String description;
 	private Set<Counter> counters = new HashSet<>();
 	private Set<CommodityCirculation> circulations = new HashSet<>();
-	private boolean isDefault;
+	private boolean defaultStore;
 	
 	public Store() {
 		super();
@@ -73,18 +73,18 @@ public class Store {
 	}
 	
 	@Column(name = "isDefault")
-	public boolean getIsDefault() {
-		return isDefault;
-	}
-	
-	public void setIsDefault(boolean isDefault) {
-		this.isDefault = isDefault;
-	}
+    public boolean isDefaultStore() {
+        return defaultStore;
+    }
+
+    public void setDefaultStore(boolean defaultStore) {
+        this.defaultStore = defaultStore;
+    }
 
 	@Override
 	public String toString() {
 		return "Store [id=" + id + ", name=" + name + ", description="
-				+ description + ", isDefault=" + isDefault + "]";
+				+ description + ", isDefault=" + defaultStore + "]";
 	}
 
 	@Override
@@ -94,7 +94,7 @@ public class Store {
 		result = prime * result
 				+ ((description == null) ? 0 : description.hashCode());
 		result = prime * result + id;
-		result = prime * result + (isDefault ? 1231 : 1237);
+		result = prime * result + (defaultStore ? 1231 : 1237);
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
@@ -115,7 +115,7 @@ public class Store {
 			return false;
 		if (id != other.id)
 			return false;
-		if (isDefault != other.isDefault)
+		if (defaultStore != other.defaultStore)
 			return false;
 		if (name == null) {
 			if (other.name != null)
@@ -124,6 +124,4 @@ public class Store {
 			return false;
 		return true;
 	}
-
-	
 }

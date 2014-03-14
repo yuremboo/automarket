@@ -25,7 +25,7 @@ public class StoreDAOImpl implements StoreDAO {
 		try {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
-			session.save(store);
+			session.saveOrUpdate(store);
 			session.getTransaction().commit();
 			log.info("Added new store: " + store);
 		} catch (Exception e) {
@@ -92,7 +92,7 @@ public class StoreDAOImpl implements StoreDAO {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
 			Criteria criteria = session.createCriteria(Store.class)
-			        .add(Restrictions.eq("isDefault", true));
+			        .add(Restrictions.eq("defaultStore", true));
 			store = (Store) criteria.list().get(0);
 			session.getTransaction().commit();
 			log.info("Get default: " + store);
@@ -105,5 +105,24 @@ public class StoreDAOImpl implements StoreDAO {
 		}
 		return store;
 	}
+
+    @Override
+    public void changeDefault(Store oldDefault, Store newDefault) {
+        Session session = null;
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            session.update(oldDefault);
+            session.update(newDefault);
+            session.getTransaction().commit();
+            log.info("Changed default store");
+        } catch (Exception e) {
+            log.error("Error insert " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+    }
 
 }

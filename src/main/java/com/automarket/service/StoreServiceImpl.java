@@ -47,4 +47,9 @@ public class StoreServiceImpl implements StoreService {
 		return storeNames;
 	}
 
+    @Override
+    public void changeDefault(Store oldDefault, Store newDefault) {
+        storeDAO.changeDefault(oldDefault, newDefault);
+    }
+
 }

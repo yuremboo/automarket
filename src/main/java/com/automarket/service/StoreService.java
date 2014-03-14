@@ -13,4 +13,5 @@ public interface StoreService {
 	Store getStoreByName(String name);
 	Store getDefault();
 	List<String> getAllStoresNames();
+    void changeDefault(Store oldDefault, Store newDefault);
 }

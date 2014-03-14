@@ -10,4 +10,6 @@ public interface StoreDAO {
 	List<Store> getAllStores();
 	Store getStoreByName(String name);
 	Store getDefault();
+
+    void changeDefault(Store oldDefault, Store newDefault);
 }
