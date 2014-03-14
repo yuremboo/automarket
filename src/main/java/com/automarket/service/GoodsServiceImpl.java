@@ -1,5 +1,6 @@
 package com.automarket.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.automarket.DAO.GoodsDAO;
@@ -35,5 +36,16 @@ public class GoodsServiceImpl implements GoodsService {
 	public Goods getGoodsByName(String name) {
 		return goodsDAO.getGoodsByName(name);
 	}
+
+    @Override
+    public List<String> getAllGoodsNames() {
+        List<Goods> goodsList = new ArrayList<>();
+        goodsList.addAll(goodsDAO.getAllGoods());
+        List<String> goodsNames = new ArrayList<>();
+        for (Goods goods : goodsList) {
+            goodsNames.add(goods.getName());
+        }
+        return goodsNames;
+    }
 
 }

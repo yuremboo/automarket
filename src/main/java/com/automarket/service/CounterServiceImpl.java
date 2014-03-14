@@ -14,8 +14,7 @@ public class CounterServiceImpl implements CounterService {
 
 	@Override
 	public void addCounter(Counter counter) {
-		// TODO Auto-generated method stub
-
+		counterDAO.addCounter(counter);
 	}
 
 	@Override
@@ -26,8 +25,7 @@ public class CounterServiceImpl implements CounterService {
 
 	@Override
 	public void updateCounter(Counter counter) {
-		// TODO Auto-generated method stub
-
+		counterDAO.updateCounter(counter);
 	}
 
 	@Override
@@ -36,7 +34,12 @@ public class CounterServiceImpl implements CounterService {
 		return null;
 	}
 
-	@Override
+    @Override
+    public Counter getCounterByGoodsStore(Goods goods, Store store) {
+        return counterDAO.getCounterByGoodsStore(goods, store);
+    }
+
+    @Override
 	public List<Counter> getCountersList() {
 		// TODO Auto-generated method stub
 		return null;
@@ -51,5 +54,15 @@ public class CounterServiceImpl implements CounterService {
 	public int sale(Goods goods, Store store, int count) {
 		return counterDAO.sale(goods, store, count);
 	}
+
+    @Override
+    public void addOrUpdateCounter(Counter counter) {
+        counterDAO.addOrUpdateCounter(counter);
+    }
+
+    @Override
+    public void addOrUpdateCounterList(List<Counter> counterList) {
+        counterDAO.addOrUpdateCounterList(counterList);
+    }
 
 }

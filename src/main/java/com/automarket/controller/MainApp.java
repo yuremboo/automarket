@@ -2,6 +2,7 @@ package com.automarket.controller;
 
 import java.io.IOException;
 
+import com.automarket.entity.Counter;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -68,5 +69,29 @@ public class MainApp extends Application {
     		log.error(e.getMessage());
     		return false;
     	}
+    }
+
+    public boolean showCounterEditDialog(Counter counter) {
+        log.info("Showing counter dialog");
+
+        try {
+            String fxmlFile = "/fxml/CounterEditDialog.fxml";
+            FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+            Parent rootNode = (Parent) loader.load();
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Edit Goods");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+            Scene scene = new Scene(rootNode);
+            dialogStage.setScene(scene);
+            CounterEditDialogController counterEditDialogController = loader.getController();
+            counterEditDialogController.setDialogStage(dialogStage);
+            counterEditDialogController.setCounter(counter);
+            dialogStage.showAndWait();
+            return counterEditDialogController.isOkClicked();
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            return false;
+        }
     }
 }

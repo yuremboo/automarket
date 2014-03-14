@@ -10,4 +10,5 @@ public interface GoodsService {
 	List<Goods> getAllGoods();
 	Goods getGoodsByName(String name);
 	void addGoodsList(List<Goods> goods);
+    List<String> getAllGoodsNames();
 }

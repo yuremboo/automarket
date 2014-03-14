@@ -50,7 +50,7 @@ public class CounterDAOImpl implements CounterDAO {
 			session.beginTransaction();
 			session.update(counter);
 			session.getTransaction().commit();
-			log.info("Added new counter: " + counter);
+			log.info("Updated counter: " + counter);
 		} catch (Exception e) {
 			log.error("Error insert " + e);
 		} finally {
@@ -66,7 +66,30 @@ public class CounterDAOImpl implements CounterDAO {
 		return null;
 	}
 
-	@Override
+    @Override
+    public Counter getCounterByGoodsStore(Goods goods, Store store) {
+        Session session = null;
+        Counter counter = new Counter();
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            Criteria criteria = session.createCriteria(Counter.class);
+            criteria.add(Restrictions.eq("store.id", store.getId()));
+            criteria.add(Restrictions.eq("goods.id", goods.getId()));
+            counter = (Counter) criteria.list().get(0);
+            session.getTransaction().commit();
+            log.info("Get all counters by Goods Store: " + counter);
+        } catch (Exception e) {
+            log.error("Error get " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+        return counter;
+    }
+
+    @Override
 	public List<Counter> getCountersList() {
 		Session session = null;
 		List<Counter> counters = new ArrayList<>();
@@ -146,4 +169,46 @@ public class CounterDAOImpl implements CounterDAO {
 		}
 		return result;
 	}
+
+    @Override
+    public void addOrUpdateCounter(Counter counter) {
+        Session session = null;
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            session.saveOrUpdate(counter);
+            session.getTransaction().commit();
+            log.info("Added new counter: " + counter);
+        } catch (Exception e) {
+            log.error("Error insert " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+    }
+
+    @Override
+    public void addOrUpdateCounterList(List<Counter> counterList) {
+        Session session = null;
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            for (Counter counter : counterList) {
+                session.saveOrUpdate(counter);
+                if (session.isDirty()) {
+                    session.flush();
+                    session.clear();
+                }
+            }
+            session.getTransaction().commit();
+            log.info("Added/updated counters: " + counterList);
+        } catch (Exception e) {
+            log.error("Error insert " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+    }
 }

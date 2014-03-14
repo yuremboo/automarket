@@ -11,6 +11,8 @@ import java.util.Map;
 
 import com.automarket.entity.Counter;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -52,6 +54,7 @@ public class MainController
 
     MainApp mainApp;
     Stage primaryStage;
+    Store defaultStore = new Store();
     
 	@FXML
 	private TextField goodsName;
@@ -88,6 +91,8 @@ public class MainController
 	@FXML
 	private ChoiceBox<String> storeChoise;
     @FXML
+    private ChoiceBox<String> containerChoice;
+    @FXML
     private TableView<Counter> counterTableView;
     @FXML
     private TableColumn<Counter, Long> goodsCounterColumnId;
@@ -118,7 +123,24 @@ public class MainController
 	public void setDialogStage(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 	}
-    
+
+    @FXML
+    private void initialize() {
+        defaultStore = storeService.getDefault();
+        storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
+        storeChoise.setItems(storesList);
+        storeChoise.setValue(defaultStore.getName());
+        containerChoice.setItems(storesList);
+        containerChoice.setValue(defaultStore.getName());
+
+        containerChoice.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String s, String s2) {
+                fillContainerTable(s2);
+            }
+        });
+    }
+
     @FXML public void showAddStage() {
 		Goods goods = new Goods();
 		boolean okClicked = mainApp.showGoodsEditDialog(goods);
@@ -128,12 +150,8 @@ public class MainController
 	}
     
     @FXML protected void saleGoods() {
-    	Store store = new Store();
-    	if (storeChoise.getValue() == null) {
-    		store = storeService.getDefault();
-    	} else {
-    		store = storeService.getStoreByName(storeChoise.getValue());
-    	}
+    	Store store = storeService.getStoreByName(storeChoise.getValue());
+
     	goodsValidLabel.setText("");
     	countValidLabel.setText("");
     	boolean name = Validator.textFieldNotEmpty(goodsName, goodsValidLabel, "Заповніть поле");
@@ -188,15 +206,6 @@ public class MainController
     @FXML protected void salesSelected() {
     	System.out.println("Sales...");
     }
-    
-    @FXML
-    private void initialize() {
-    	//commodityList();
-    	storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
-    	storesList.add(null);
-    	storeChoise.setItems(storesList);
-    	System.out.println(storeChoise.getValue());
-    }
         
     @FXML protected void goodsSelected(Event event) {
     	log.debug("Load GOODS...");
@@ -218,7 +227,11 @@ public class MainController
     
     @FXML protected void containerSelected() {
     	log.debug("Containers...");
-        Store store = storeService.getDefault();
+        fillContainerTable(containerChoice.getValue());
+    }
+
+    private void fillContainerTable(String storeName) {
+        Store store = storeService.getStoreByName(storeName);
         if(!goodsFullList.isEmpty())
             goodsFullList.clear();
         List<Counter> counters = new ArrayList<>();
@@ -228,7 +241,7 @@ public class MainController
             public void run() {
                 goodsCounterColumnId.setCellValueFactory(new PropertyValueFactory<Counter, Long>("id"));
                 goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<Counter, String>("goodsName"));
-//                goodsCounterColumnDescription.setCellValueFactory(new PropertyValueFactory<Counter, String>("description"));
+                goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<Counter, String>("storeName"));
                 goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<Counter, Integer>("count"));
             }
         });
@@ -283,8 +296,7 @@ public class MainController
         	for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
         		Goods goods = new Goods();
         		goods.setName((String) entry.getValue().get(0));
-        		boolean b = entry.getValue().get(1) != null ? true:false;
-        		if (b) {
+                if (entry.getValue().size() > 1) {
         			goods.setDescription((String) entry.getValue().get(1));
         		}
         		goodsList.add(goods);
@@ -293,6 +305,43 @@ public class MainController
         }
     }
 
-	
+    @FXML protected void showAddGoodsStage() {
+        Counter counter = new Counter();
+        boolean okClicked = mainApp.showCounterEditDialog(counter);
+        if (okClicked) {
+            Counter counterByGoodsStore = counterService.getCounterByGoodsStore(counter.getGoods(), counter.getStore());
+            counter.setId(counterByGoodsStore.getId());
+            counterService.addOrUpdateCounter(counter);
+        }
+    }
 
+    @FXML protected void onLoadCounters() {
+        FileChooser fileChooser = new FileChooser();
+        ExtensionFilter filter = new ExtensionFilter("MS Office Excell files", "*.xls", "*.xlsx");
+        fileChooser.getExtensionFilters().add(filter);
+        File file = fileChooser.showOpenDialog(primaryStage);
+        List<Counter> counterList = new ArrayList<>();
+        if (file != null) {
+            Map<Integer, List<Object>> data = new HashMap<>(WorkWithExcel.readFromExcell(file));
+            for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
+                Goods goods;
+                Counter counter = new Counter();
+                Store store;
+                goods = goodsService.getGoodsByName((String) entry.getValue().get(0));
+                store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
+                int count = ((Double) entry.getValue().get(2)).intValue();
+                counter.setGoods(goods);
+                counter.setStore(store);
+                counter.setCount(count);
+                Counter counterByGoodsStore = counterService.getCounterByGoodsStore(goods, store);
+                counter.setId(counterByGoodsStore.getId());
+                counterList.add(counter);
+            }
+            counterService.addOrUpdateCounterList(counterList);
+        }
+    }
+
+    @FXML protected void addContainer() {
+
+    }
 }
