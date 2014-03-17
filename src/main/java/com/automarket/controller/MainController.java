@@ -321,10 +321,6 @@ public class MainController
     @FXML protected void clickSales() {
     	commodityList();
     }
-
-    @FXML protected void clickMonthSales() {
-    	commodityList();
-    }
     
     @FXML protected void onLoad() {
     	FileChooser fileChooser = new FileChooser();
@@ -352,6 +348,17 @@ public class MainController
         if (okClicked) {
             Counter counterByGoodsStore = counterService.getCounterByGoodsStore(counter.getGoods(), counter.getStore());
             counter.setId(counterByGoodsStore.getId());
+            CommodityCirculation circulation = new CommodityCirculation();
+            circulation.setCount(counter.getCount());
+            circulation.setDate(new Date());
+            circulation.setGoods(counter.getGoods());
+            circulation.setStore(counter.getStore());
+            circulation.setSale(false);
+            circulationsService.addCirculation(circulation);
+            if (counter.getId() > 0) {
+                counter.setCount(counter.getCount() + counterByGoodsStore.getCount());
+            }
+
             counterService.addOrUpdateCounter(counter);
         }
     }
@@ -362,11 +369,13 @@ public class MainController
         fileChooser.getExtensionFilters().add(filter);
         File file = fileChooser.showOpenDialog(primaryStage);
         List<Counter> counterList = new ArrayList<>();
+        List<CommodityCirculation> circulationList = new ArrayList<>();
         if (file != null) {
             Map<Integer, List<Object>> data = new HashMap<>(WorkWithExcel.readFromExcell(file));
             for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
                 Goods goods;
                 Counter counter = new Counter();
+                CommodityCirculation circulation = new CommodityCirculation();
                 Store store;
                 goods = goodsService.getGoodsByName((String) entry.getValue().get(0));
                 if (goods.getId() == 0) {
@@ -378,10 +387,20 @@ public class MainController
                 counter.setGoods(goods);
                 counter.setStore(store);
                 counter.setCount(count);
+                circulation.setCount(count);
+                circulation.setDate(new Date());
+                circulation.setGoods(goods);
+                circulation.setStore(store);
+                circulation.setSale(false);
                 Counter counterByGoodsStore = counterService.getCounterByGoodsStore(goods, store);
                 counter.setId(counterByGoodsStore.getId());
+                if (counter.getId() > 0) {
+                    counter.setCount(counter.getCount() + counterByGoodsStore.getCount());
+                }
+                circulationList.add(circulation);
                 counterList.add(counter);
             }
+            circulationsService.addCirculations(circulationList);
             counterService.addOrUpdateCounterList(counterList);
         }
     }
@@ -487,18 +506,67 @@ public class MainController
         int selectedIndex = goodsTable.getSelectionModel().getSelectedIndex();
         if (selectedIndex >= 0) {
             Dialogs.DialogResponse dialogResponse = Dialogs.showConfirmDialog(primaryStage,
-                    "Ви дійсно бажаєте видалити товар? " + goodsTable.getSelectionModel().selectedItemProperty().get().getName(),
+                    "Ви дійсно бажаєте видалити товар? Дію не можливо буде повернути!" + goodsTable.getSelectionModel().selectedItemProperty().get().getName(),
                     "Видалити товар", "Видалення");
             if (dialogResponse.name().equals("YES")) {
+                goodsService.remove(goodsTable.getSelectionModel().getSelectedItem());
                 goodsTable.getItems().remove(selectedIndex);
             }
         } else {
             Dialogs.showWarningDialog(primaryStage,
-                    "Please select a person in the table.",
-                    "No Person Selected", "No Selection");
+                    "Виберіть товар для видалення.",
+                    "Не вибрано товару", "Не вибрано");
+        }
+    }
+
+    @FXML
+    protected void handleEditGoods() {
+        Goods selectedGoods = goodsTable.getSelectionModel().getSelectedItem();
+        if (selectedGoods != null) {
+            boolean okClicked = mainApp.showGoodsEditDialog(selectedGoods);
+            if (okClicked) {
+                goodsService.addGoods(selectedGoods);
+                refreshTable();
+            }
+        }
+    }
+
+    private void refreshTable() {
+        int selectedIndex = goodsTable.getSelectionModel().getSelectedIndex();
+        goodsTable.setItems(null);
+        goodsTable.layout();
+        goodsList = FXCollections.observableList(goodsService.getAllGoods());
+        goodsTable.setItems(goodsList);
+        // Must set the selected index again (see http://javafx-jira.kenai.com/browse/RT-26291)
+        goodsTable.getSelectionModel().select(selectedIndex);
+    }
+
+    @FXML
+    protected void exportCounters() {
+        ArrayList<Counter> counterArrayList = new ArrayList<>(counterTableView.getItems());
+        Map<Integer, ArrayList<Object>> listMap = new HashMap<>();
+        //listMap.put(-1, new ArrayList<Object>(Arrays.asList("Товар" , "Кількість", "Контейнер", "Дата", "Продаж")));
+        for (Counter counter:counterArrayList) {
+            ArrayList<Object> objects = new ArrayList<>();
+            objects.add(counter.getGoodsName());
+            objects.add(counter.getStoreName());
+            objects.add(counter.getCount());
+            listMap.put(counterArrayList.indexOf(counter), objects);
         }
 
+        boolean result = WorkWithExcel.writeToExcell(listMap);
+        if (result) {
+            Dialogs.showInformationDialog(primaryStage, "Дані успішно експортовано в папку з програмою");
+        } else {
+            Dialogs.showErrorDialog(primaryStage, "Виникла помилка при експортуванні звіту! Зверніться до розробника");
+        }
+    }
 
-
+    @FXML
+    protected void showCopyright() {
+        String s = System.getProperty("line.separator");
+        Dialogs.showInformationDialog(primaryStage, "Програма для ведення обліку руху товару." + s +
+                "Розробник Юрій Михалецький" + s + "email:yurik.my@gmail.com" + s +
+                "All rights reserved © Yurembo 2014.", "Про програму", "Copyright");
     }
 }

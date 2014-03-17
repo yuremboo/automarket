@@ -21,7 +21,7 @@ public class CommodityCirculationsServiceImpl implements
 	}
 
 	@Override
-	public void addCirculations(ArrayList<CommodityCirculation> circulations) {
+	public void addCirculations(List<CommodityCirculation> circulations) {
 		circulationDAO.addCirculations(circulations);
 	}
 

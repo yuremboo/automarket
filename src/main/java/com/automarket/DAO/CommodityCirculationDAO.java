@@ -10,7 +10,7 @@ import com.automarket.entity.Store;
 
 public interface CommodityCirculationDAO {
 	void addCirculation(CommodityCirculation commodityCirculation);
-	void addCirculations(ArrayList<CommodityCirculation> circulations);
+	void addCirculations(List<CommodityCirculation> circulations);
 	List<CommodityCirculation> commodityCirculations();
 	List<CommodityCirculation> commodityCirculationsByDay(boolean b);
 	List<CommodityCirculation> commodityCirculationsByMonth();

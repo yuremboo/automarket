@@ -1,9 +1,11 @@
 package com.automarket.entity;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -63,6 +65,7 @@ public class Goods {
 	}
 	
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "goods")
+    @Cascade({CascadeType.SAVE_UPDATE, CascadeType.DELETE})
 	public Set<Counter> getCounters() {
 		return counters;
 	}
@@ -72,6 +75,7 @@ public class Goods {
 	}
 	
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "goods")
+    @Cascade({CascadeType.SAVE_UPDATE, CascadeType.DELETE})
 	public Set<CommodityCirculation> getCommodityCirculations() {
 		return commodityCirculations;
 	}

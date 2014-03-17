@@ -6,7 +6,7 @@ import com.automarket.entity.Goods;
 
 public interface GoodsService {
 	void addGoods(Goods goods);
-	void remove(int id);
+	void remove(Goods goods);
 	List<Goods> getAllGoods();
 	Goods getGoodsByName(String name);
 	void addGoodsList(List<Goods> goods);

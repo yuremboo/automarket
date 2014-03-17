@@ -22,9 +22,8 @@ public class GoodsServiceImpl implements GoodsService {
 	}
 
 	@Override
-	public void remove(int id) {
-		// TODO Auto-generated method stub
-
+	public void remove(Goods goods) {
+		goodsDAO.remove(goods);
 	}
 
 	@Override

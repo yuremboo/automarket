@@ -41,9 +41,27 @@ public class CommodityCirculationDAOImpl implements CommodityCirculationDAO {
 	}
 
 	@Override
-	public void addCirculations(ArrayList<CommodityCirculation> circulations) {
-		// TODO Auto-generated method stub
-		
+	public void addCirculations(List<CommodityCirculation> circulations) {
+        Session session = null;
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            for (CommodityCirculation circulation : circulations) {
+                session.save(circulation);
+                if (session.isDirty()) {
+                    session.flush();
+                    session.clear();
+                }
+            }
+            session.getTransaction().commit();
+            log.info("Added/updated circulations: " + circulations);
+        } catch (Exception e) {
+            log.error("Error insert " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
 	}
 
 	@Override

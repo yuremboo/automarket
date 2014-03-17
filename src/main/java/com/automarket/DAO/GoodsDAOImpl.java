@@ -24,7 +24,7 @@ public class GoodsDAOImpl implements GoodsDAO {
 		try {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
-			session.save(goods);
+			session.saveOrUpdate(goods);
 			session.getTransaction().commit();
 			log.info("Added new goods: " + goods);
 		} catch (Exception e) {
@@ -61,9 +61,21 @@ public class GoodsDAOImpl implements GoodsDAO {
 	}
 
 	@Override
-	public void remove(int id) {
-		// TODO Auto-generated method stub
-
+	public void remove(Goods goods) {
+		Session session = null;
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            session.delete(goods);
+            session.getTransaction().commit();
+            log.info("Deleted goods: " + goods);
+        } catch (Exception e) {
+            log.error("Error insert " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
 	}
 
 	@Override

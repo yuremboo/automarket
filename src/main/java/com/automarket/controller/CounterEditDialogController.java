@@ -90,14 +90,14 @@ public class CounterEditDialogController {
      */
     @FXML
     private void  handleOk() {
-        if (Validator.textFieldNotEmpty(countField)) {
+        if (Validator.textFieldNotEmpty(countField) && Integer.valueOf(countField.getText()) > 0) {
             counter.setCount(Integer.parseInt(countField.getText()));
             counter.setGoods(goodsService.getGoodsByName(goodsChoice.getValue()));
             counter.setStore(storeService.getStoreByName(containerChoice.getValue()));
             okClicked = true;
             dialogStage.close();
         } else {
-            Dialogs.showErrorDialog(dialogStage, "Заповніть всі поля!");
+            Dialogs.showErrorDialog(dialogStage, "Заповніть всі поля корректно!");
         }
     }
 
