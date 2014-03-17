@@ -1,7 +1,6 @@
 package com.automarket.controller;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -14,18 +13,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +47,6 @@ public class MainController
     
 	@FXML
 	private TextField goodsName;
-	@FXML
-	private Label messageLabel;
 	@FXML
 	private Label infoLabel;
 	@FXML
@@ -93,6 +85,18 @@ public class MainController
     private TableColumn<Counter, String> goodsCounterColumnContainer;
     @FXML
     private TableColumn<Counter, Integer> goodsCounterColumnC;
+    @FXML
+    private TableView<CommodityCirculation> reportTableView;
+    @FXML
+    private TableColumn<CommodityCirculation, String> goodsReportColumn;
+    @FXML
+    private TableColumn<CommodityCirculation, Integer> countReportColumn;
+    @FXML
+    private TableColumn<CommodityCirculation, String> storeReportColumn;
+    @FXML
+    private TableColumn<CommodityCirculation, Date> dateReportColumn;
+    @FXML
+    private TableColumn<CommodityCirculation, String> saleReportColumn;
     @FXML
     private ChoiceBox<String> storeFilterChoice;
     @FXML
@@ -151,6 +155,7 @@ public class MainController
 
         defaultStore = storeService.getDefault();
         storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
+        storesList.add("Всі");
         storeChoise.setItems(storesList);
         storeChoise.setValue(defaultStore.getName());
         containerChoice.setItems(storesList);
@@ -220,15 +225,14 @@ public class MainController
     }
     
     @FXML protected void cancelSale() {
-    	storeChoise.setValue(null);
     	goodsName.setText("");
     	goodsCount.setText("");
     }
-    
+
     @FXML protected void loadStoresClick() {
     	System.out.println("Load...");
     }
-    
+
     @FXML protected void salesSelected() {
     	System.out.println("Sales...");
     }
@@ -247,13 +251,16 @@ public class MainController
 		        goodsColumnDescription.setCellValueFactory(new PropertyValueFactory<Goods, String>("description"));
 			}
 		});
+        goodsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         goodsList = FXCollections.observableList(goods);
         goodsTable.setItems(goodsList);
     }
     
     @FXML protected void containerSelected() {
     	log.debug("Containers...");
-        fillContainerTable(containerChoice.getValue());
+        if (containerChoice.getValue() != null && !containerChoice.getValue().equals("Всі")) {
+            fillContainerTable(containerChoice.getValue());
+        }
     }
 
     private void fillContainerTable(String storeName) {
@@ -277,6 +284,7 @@ public class MainController
                 goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<Counter, Integer>("count"));
             }
         });
+        counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         goodsFullList = FXCollections.observableList(counters);
         counterTableView.setItems(goodsFullList);
     }
@@ -305,6 +313,7 @@ public class MainController
 						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("storeName"));
 			}
 		});
+        commodityCirculationTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 		circulationsList = FXCollections.observableList(circulations);
 		commodityCirculationTable.setItems(circulationsList);
 	}
@@ -312,7 +321,7 @@ public class MainController
     @FXML protected void clickSales() {
     	commodityList();
     }
-    
+
     @FXML protected void clickMonthSales() {
     	commodityList();
     }
@@ -360,6 +369,10 @@ public class MainController
                 Counter counter = new Counter();
                 Store store;
                 goods = goodsService.getGoodsByName((String) entry.getValue().get(0));
+                if (goods.getId() == 0) {
+                    goodsService.addGoods(new Goods(0, (String) entry.getValue().get(0), ""));
+                    goods = goodsService.getGoodsByName((String) entry.getValue().get(0));
+                }
                 store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
                 int count = ((Double) entry.getValue().get(2)).intValue();
                 counter.setGoods(goods);
@@ -378,10 +391,15 @@ public class MainController
         boolean okClicked = mainApp.showStoreAddDialog(store);
         if (okClicked) {
             storeService.addStore(store);
+            storeChoise.getItems().add(store.getName());
         }
     }
 
     @FXML protected void setAsDefault() {
+        if (containerChoice.getValue().equals("Всі")) {
+            Dialogs.showWarningDialog(primaryStage, "Не можна встановити всі контейнери за замовчуванням!");
+            return;
+        }
         defaultStore.setDefaultStore(false);
         Store newDefault = storeService.getStoreByName(containerChoice.getValue());
         newDefault.setDefaultStore(true);
@@ -409,6 +427,78 @@ public class MainController
             commodityCirculationsReport.addAll(circulationsService
                     .commodityCirculationsByTerm(fromDate, toDate, filterStore, filterGoods));
         }
-        System.out.println("ds");
+        if (commodityCirculationsReport.size() > 0) {
+            fillRepotrTable(commodityCirculationsReport);
+        } else {
+            reportTableView.setItems(null);
+        }
+    }
+
+    private void fillRepotrTable(List<CommodityCirculation> circulations) {
+        ObservableList<CommodityCirculation> circulationsReportList = FXCollections
+                .observableArrayList(circulations);
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                goodsReportColumn
+                        .setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("goodsName"));
+                countReportColumn
+                        .setCellValueFactory(new PropertyValueFactory<CommodityCirculation, Integer>("count"));
+                storeReportColumn
+                        .setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("storeName"));
+                dateReportColumn
+                        .setCellValueFactory(new PropertyValueFactory<CommodityCirculation, Date>("date"));
+                saleReportColumn
+                        .setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("saleProp"));
+
+            }
+        });
+
+        reportTableView.setItems(circulationsReportList);
+        reportTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    @FXML
+    protected void exportReport() {
+        goodsReportColumn.setSortType(TableColumn.SortType.ASCENDING);
+        ArrayList<CommodityCirculation> report = new ArrayList<>(reportTableView.getItems());
+        Map<Integer, ArrayList<Object>> listMap = new HashMap<>();
+        //listMap.put(-1, new ArrayList<Object>(Arrays.asList("Товар" , "Кількість", "Контейнер", "Дата", "Продаж")));
+        for (CommodityCirculation circulation:report) {
+            ArrayList<Object> objects = new ArrayList<>();
+            objects.add(circulation.getGoodsName());
+            objects.add(circulation.getCount());
+            objects.add(circulation.getStoreName());
+            objects.add(circulation.getDate());
+            objects.add(circulation.getSaleProp());
+            listMap.put(report.indexOf(circulation), objects);
+        }
+
+        boolean result = WorkWithExcel.writeToExcell(listMap);
+        if (result) {
+            Dialogs.showInformationDialog(primaryStage, "Звіт успішно експортовано в папку з програмою");
+        } else {
+            Dialogs.showErrorDialog(primaryStage, "Виникла помилка при експортуванні звіту! Зверніться до розробника");
+        }
+    }
+
+    @FXML
+    protected void handleDeleteGoods() {
+        int selectedIndex = goodsTable.getSelectionModel().getSelectedIndex();
+        if (selectedIndex >= 0) {
+            Dialogs.DialogResponse dialogResponse = Dialogs.showConfirmDialog(primaryStage,
+                    "Ви дійсно бажаєте видалити товар? " + goodsTable.getSelectionModel().selectedItemProperty().get().getName(),
+                    "Видалити товар", "Видалення");
+            if (dialogResponse.name().equals("YES")) {
+                goodsTable.getItems().remove(selectedIndex);
+            }
+        } else {
+            Dialogs.showWarningDialog(primaryStage,
+                    "Please select a person in the table.",
+                    "No Person Selected", "No Selection");
+        }
+
+
+
     }
 }

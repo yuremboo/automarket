@@ -1,18 +1,16 @@
 package com.automarket.utils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.lang.reflect.Array;
+import java.text.DateFormat;
+import java.util.*;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -72,4 +70,45 @@ public class WorkWithExcel {
 		}
 		return result;
 	}
+
+    public static boolean writeToExcell(Map<Integer,ArrayList<Object>> data) {
+        boolean result = true;
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        CellStyle cellStyle = workbook.createCellStyle();
+        DataFormat dateFormat = workbook.createDataFormat();
+        cellStyle.setDataFormat(dateFormat.getFormat("[$-809]DD/MM/YY HH:MM;@"));
+        XSSFSheet sheet = workbook.createSheet("Report");
+        Set<Integer> keyset = data.keySet();
+        int rownum = 0;
+        for (Integer key : keyset) {
+            Row row = sheet.createRow(rownum++);
+            ArrayList<Object> objects = data.get(key);
+            int cellNum = 0;
+            for (Object obj:objects) {
+                Cell cell = row.createCell(cellNum++);
+                if (obj instanceof String) {
+                    cell.setCellValue((String) obj);
+                } else if (obj instanceof Integer) {
+                    cell.setCellValue((Integer) obj);
+                } else if (obj instanceof Date) {
+                    cell.setCellStyle(cellStyle);
+                    cell.setCellValue((Date) obj);
+                }
+            }
+        }
+        try {
+            FileOutputStream outputStream = new FileOutputStream(new File(String.valueOf((new Date()).getTime())
+                    + "report.xlsx"));
+            workbook.write(outputStream);
+            outputStream.close();
+
+        } catch (FileNotFoundException e) {
+            result = false;
+            e.printStackTrace();
+        } catch (IOException e) {
+            result = false;
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

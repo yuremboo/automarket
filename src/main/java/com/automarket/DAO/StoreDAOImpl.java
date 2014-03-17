@@ -112,7 +112,9 @@ public class StoreDAOImpl implements StoreDAO {
         try {
             session = getSessionFactory().openSession();
             session.beginTransaction();
-            session.update(oldDefault);
+            if (oldDefault.getId() > 0) {
+                session.update(oldDefault);
+            }
             session.update(newDefault);
             session.getTransaction().commit();
             log.info("Changed default store");

@@ -23,6 +23,7 @@ public class CommodityCirculation {
 	private Store store;
 	private String goodsName;
 	private String storeName;
+    private String saleProp;
 	
 	public CommodityCirculation() {
 		super();
@@ -77,6 +78,11 @@ public class CommodityCirculation {
 
     public void setSale(boolean sale) {
         this.sale = sale;
+        if (sale) {
+            this.saleProp = "Продаж";
+        } else {
+            this.saleProp = "Надходження";
+        }
     }
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
@@ -101,6 +107,13 @@ public class CommodityCirculation {
 	public void setStoreName(String storeName) {
 		this.storeName = storeName;
 	}
+    @Transient
+    public String getSaleProp() {
+        return saleProp;
+    }
+    public void setSaleProp(String saleProp) {
+        this.saleProp = saleProp;
+    }
 	@Override
 	public String toString() {
 		return "CommodityCirculation [id=" + id + ", date=" + date + ", goods="
