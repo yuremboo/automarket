@@ -243,17 +243,13 @@ public class MainController
         	goodsList.clear();
         List<Goods> goods = new ArrayList<>();
         goods.addAll(goodsService.getAllGoods());
-        Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
+        goodsList = FXCollections.observableList(goods);
+        goodsTable.setItems(goodsList);
 				goodsColumnId.setCellValueFactory(new PropertyValueFactory<Goods, Long>("id"));
 		    	goodsColumnName.setCellValueFactory(new PropertyValueFactory<Goods, String>("name"));
 		        goodsColumnDescription.setCellValueFactory(new PropertyValueFactory<Goods, String>("description"));
-			}
-		});
         goodsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        goodsList = FXCollections.observableList(goods);
-        goodsTable.setItems(goodsList);
+
     }
     
     @FXML protected void containerSelected() {
@@ -274,19 +270,14 @@ public class MainController
             counters.addAll(counterService.getCountersList());
         }
 
-
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
+        goodsFullList = FXCollections.observableList(counters);
+        counterTableView.setItems(goodsFullList);
                 goodsCounterColumnId.setCellValueFactory(new PropertyValueFactory<Counter, Long>("id"));
                 goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<Counter, String>("goodsName"));
                 goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<Counter, String>("storeName"));
                 goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<Counter, Integer>("count"));
-            }
-        });
         counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        goodsFullList = FXCollections.observableList(counters);
-        counterTableView.setItems(goodsFullList);
+
     }
     
     @FXML protected void getInfo() {
@@ -302,20 +293,18 @@ public class MainController
     public void commodityList() {
 		List<CommodityCirculation> circulations = new ArrayList<>();
 		circulations.addAll(circulationsService.commodityCirculationsByDay(true));
-		Platform.runLater(new Runnable() {
-			@Override
-			public void run() {
+        commodityCirculationTable.setItems(circulationsList);
+
 				commodityCirculationColumnName
 						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("goodsName"));
 				commodityCirculationColumnCount
 						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, Integer>("count"));
 				commodityCirculationColumnContainer
 						.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("storeName"));
-			}
-		});
+
         commodityCirculationTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 		circulationsList = FXCollections.observableList(circulations);
-		commodityCirculationTable.setItems(circulationsList);
+
 	}
     
     @FXML protected void clickSales() {
@@ -360,6 +349,7 @@ public class MainController
             }
 
             counterService.addOrUpdateCounter(counter);
+            fillContainerTable(containerChoice.getValue());
         }
     }
 
@@ -377,10 +367,10 @@ public class MainController
                 Counter counter = new Counter();
                 CommodityCirculation circulation = new CommodityCirculation();
                 Store store;
-                goods = goodsService.getGoodsByName((String) entry.getValue().get(0));
+                goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
                 if (goods.getId() == 0) {
-                    goodsService.addGoods(new Goods(0, (String) entry.getValue().get(0), ""));
-                    goods = goodsService.getGoodsByName((String) entry.getValue().get(0));
+                    goodsService.addGoods(new Goods(0, entry.getValue().get(0).toString(), ""));
+                    goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
                 }
                 store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
                 int count = ((Double) entry.getValue().get(2)).intValue();
@@ -403,6 +393,7 @@ public class MainController
             circulationsService.addCirculations(circulationList);
             counterService.addOrUpdateCounterList(counterList);
         }
+        fillContainerTable(storeChoise.getValue());
     }
 
     @FXML protected void addContainer() {
@@ -456,9 +447,8 @@ public class MainController
     private void fillRepotrTable(List<CommodityCirculation> circulations) {
         ObservableList<CommodityCirculation> circulationsReportList = FXCollections
                 .observableArrayList(circulations);
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
+        reportTableView.setItems(circulationsReportList);
+
                 goodsReportColumn
                         .setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("goodsName"));
                 countReportColumn
@@ -470,10 +460,8 @@ public class MainController
                 saleReportColumn
                         .setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("saleProp"));
 
-            }
-        });
 
-        reportTableView.setItems(circulationsReportList);
+
         reportTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
@@ -565,7 +553,7 @@ public class MainController
     @FXML
     protected void showCopyright() {
         String s = System.getProperty("line.separator");
-        Dialogs.showInformationDialog(primaryStage, "Програма для ведення обліку руху товару." + s +
+        Dialogs.showInformationDialog(primaryStage, "Програма для ведення обліку товару." + s +
                 "Розробник Юрій Михалецький" + s + "email:yurik.my@gmail.com" + s +
                 "All rights reserved © Yurembo 2014.", "Про програму", "Copyright");
     }
