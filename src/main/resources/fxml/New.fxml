@@ -10,7 +10,7 @@
 
 <AnchorPane id="rootPane" prefHeight="456.0" prefWidth="662.0" styleClass="main-panel" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.automarket.controller.MainController">
 	<children>
-		<TabPane prefHeight="435.0" prefWidth="608.0" styleClass="tabRootPane" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+		<TabPane fx:id="mainTabPane" prefHeight="435.0" prefWidth="608.0" styleClass="tabRootPane" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 			<tabs>
 				<Tab onSelectionChanged="#salesSelected" text="Продажі">
 					<content>
@@ -265,6 +265,7 @@
 </content>
 </Tab>
 			</tabs>
-		</TabPane><Hyperlink onAction="#showCopyright" text="© Yurembo 2014. About" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+		</TabPane><ProgressIndicator prefHeight="20.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="0.0" /><ProgressBar prefWidth="200.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="50.0">
+</ProgressBar><Hyperlink onAction="#showCopyright" text="© Yurembo 2014. About" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" />
 	</children>
 </AnchorPane>

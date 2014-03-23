@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="rootPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mouseTransparent="true" prefHeight="94.0" prefWidth="280.0" styleClass="main-panel" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.automarket.controller.MainController">
+  <children><ProgressIndicator fx:id="progressIndicator" layoutX="14.0" layoutY="11.0" progress="0.0" /><ProgressBar fx:id="progressBar" layoutX="59.0" layoutY="14.0" prefHeight="20.0" prefWidth="204.0" progress="0.0" />
+        <Button layoutX="100.0" layoutY="57.0" mnemonicParsing="false" prefWidth="80.0" text="Cancel" />
+  </children>
+</AnchorPane>

@@ -44,7 +44,9 @@ public class MainController
     MainApp mainApp;
     Stage primaryStage;
     Store defaultStore = new Store();
-    
+
+    @FXML
+    private TabPane mainTabPane;
 	@FXML
 	private TextField goodsName;
 	@FXML
@@ -354,10 +356,12 @@ public class MainController
     }
 
     @FXML protected void onLoadCounters() {
+
         FileChooser fileChooser = new FileChooser();
         ExtensionFilter filter = new ExtensionFilter("MS Office Excell files", "*.xls", "*.xlsx");
         fileChooser.getExtensionFilters().add(filter);
         File file = fileChooser.showOpenDialog(primaryStage);
+        mainTabPane.setDisable(true);
         List<Counter> counterList = new ArrayList<>();
         List<CommodityCirculation> circulationList = new ArrayList<>();
         if (file != null) {
@@ -394,6 +398,7 @@ public class MainController
             counterService.addOrUpdateCounterList(counterList);
         }
         fillContainerTable(storeChoise.getValue());
+        mainTabPane.setDisable(false);
     }
 
     @FXML protected void addContainer() {

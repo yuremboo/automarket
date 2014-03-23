@@ -120,4 +120,21 @@ public class MainApp extends Application {
             return false;
         }
     }
+
+    public void showLoading() {
+        try {
+            String fxmlFile = "/fxml/LoadingDialog.fxml";
+            FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+            Parent rootNode = (Parent) loader.load();
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Loading...");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+            Scene scene = new Scene(rootNode);
+            dialogStage.setScene(scene);
+            dialogStage.showAndWait();
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
 }
