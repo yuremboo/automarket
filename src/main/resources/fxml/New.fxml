@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.*?>
+<?import java.net.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
@@ -8,13 +9,13 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane id="rootPane" prefHeight="456.0" prefWidth="662.0" styleClass="main-panel" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.automarket.controller.MainController">
+<AnchorPane prefHeight="456.0" prefWidth="662.0" styleClass="main-panel" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.automarket.controller.MainController">
 	<children>
 		<TabPane fx:id="mainTabPane" prefHeight="435.0" prefWidth="608.0" styleClass="tabRootPane" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 			<tabs>
 				<Tab onSelectionChanged="#salesSelected" text="Продажі">
 					<content>
-						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="337.0" prefWidth="517.0" styleClass="main-panel">
+						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="337.0" prefWidth="517.0">
 							<children>
 								<SplitPane dividerPositions="0.5742424242424242" focusTraversable="true" prefHeight="400.0" prefWidth="592.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 									<items>
@@ -44,7 +45,7 @@
 												</Accordion>
 											</children>
 										</AnchorPane>
-										<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="421.0" prefWidth="311.0" styleClass="main-panel" SplitPane.resizableWithParent="false">
+										<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="421.0" prefWidth="311.0" styleClass="panel" SplitPane.resizableWithParent="false">
 											<children>
 												<Label alignment="CENTER" prefHeight="29.0" prefWidth="277.0" styleClass="hello-message" text="Продажа товару" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
 												<GridPane hgap="5.0" layoutX="6.0" layoutY="229.0" prefHeight="163.0" prefWidth="277.0" vgap="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
@@ -111,14 +112,14 @@
 				</Tab>
 				<Tab onSelectionChanged="#containerSelected" text="Контейнер">
 					<content>
-						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="main-panel">
+						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="panel">
 							<children>
 								<BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 									<bottom>
 										<HBox alignment="BASELINE_CENTER" prefHeight="50.0" prefWidth="200.0" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" BorderPane.alignment="CENTER">
 											<children>
-												<Button layoutX="14.0" layoutY="363.0" mnemonicParsing="false" onAction="#showAddGoodsStage" text="Додати" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" />
-												<Button mnemonicParsing="false" onAction="#onLoadCounters" text="Імпорт" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="210.0" /><Button mnemonicParsing="false" onAction="#exportCounters" text="Експорт" />
+												<Button fx:id="addCount" layoutX="14.0" layoutY="363.0" mnemonicParsing="false" onAction="#showAddGoodsStage" text="Додати" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" />
+												<Button fx:id="importCount" mnemonicParsing="false" onAction="#onLoadCounters" text="Імпорт" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="210.0" /><Button fx:id="exportCount" mnemonicParsing="false" onAction="#exportCounters" text="Експорт" />
 											</children>
 											<padding>
 												<Insets top="10.0" />
@@ -147,7 +148,7 @@
 												<ChoiceBox fx:id="containerChoice" prefWidth="150.0">
 <HBox.margin>
 <Insets left="10.0" />
-</HBox.margin></ChoiceBox><Button mnemonicParsing="false" onAction="#addContainer" text="Додати контейнер" /><Button mnemonicParsing="false" onAction="#setAsDefault" text="За замовчуванням" />
+</HBox.margin></ChoiceBox><Button mnemonicParsing="false" onAction="#addContainer" text="Додати контейнер" /><Button mnemonicParsing="false" onAction="#setAsDefault" text="За замовчуванням" /><TextField fx:id="searchTextField" prefHeight="25.0" prefWidth="117.0" />
 											</children>
 											<padding>
 												<Insets bottom="10.0" top="10.0" />
@@ -161,7 +162,7 @@
 				</Tab>
 				<Tab onSelectionChanged="#goodsSelected" text="Товар">
 					<content>
-						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="main-panel">
+						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="panel">
 							<children>
 								<BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 									<top>
@@ -217,7 +218,7 @@
 				</Tab>
 <Tab onSelectionChanged="#goodsSelected" text="Звіти">
 <content>
-<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="main-panel">
+<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="panel">
 <children><BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 <left><VBox prefHeight="393.0" prefWidth="190.0" spacing="10.0" BorderPane.alignment="CENTER">
 <children><Label alignment="CENTER" contentDisplay="TOP" prefHeight="15.0" prefWidth="153.0" text="Фільтр">
@@ -265,7 +266,10 @@
 </content>
 </Tab>
 			</tabs>
-		</TabPane><ProgressIndicator prefHeight="20.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="0.0" /><ProgressBar prefWidth="200.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="50.0">
+		</TabPane><ProgressIndicator fx:id="progressIndicator" prefHeight="20.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="0.0" /><ProgressBar fx:id="progressBar" maxHeight="20.0" minHeight="20.0" prefHeight="20.0" prefWidth="200.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="50.0">
 </ProgressBar><Hyperlink onAction="#showCopyright" text="© Yurembo 2014. About" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" />
 	</children>
+    <stylesheets>
+        <URL value="@../styles/styles.css" />
+    </stylesheets>
 </AnchorPane>

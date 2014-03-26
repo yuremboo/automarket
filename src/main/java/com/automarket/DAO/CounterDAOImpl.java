@@ -211,4 +211,27 @@ public class CounterDAOImpl implements CounterDAO {
             }
         }
     }
+
+    @Override
+    public List<Counter> searchCountersByGoods(String s) {
+        Session session = null;
+        List<Counter> counters = new ArrayList<>();
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            Criteria criteria = session.createCriteria(Counter.class);
+            criteria.createAlias("goods", "g");
+            criteria.add(Restrictions.like("g.name", "%" + s + "%").ignoreCase());
+            counters.addAll(criteria.list());
+            session.getTransaction().commit();
+            log.info("Search all counters: " + counters);
+        } catch (Exception e) {
+            log.error("Error search " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+        return counters;
+    }
 }

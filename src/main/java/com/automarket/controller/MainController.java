@@ -11,6 +11,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -107,6 +109,18 @@ public class MainController
     private CheckBox incomeOnlyCheck;
     @FXML
     private CheckBox salesOnlyCheck;
+    @FXML
+    private ProgressBar progressBar;
+    @FXML
+    private ProgressIndicator progressIndicator;
+    @FXML
+    private Button addCount;
+    @FXML
+    private Button importCount;
+    @FXML
+    private Button exportCount;
+    @FXML
+    private TextField searchTextField;
     
 	private GoodsService goodsService = new GoodsServiceImpl();
 	private CounterService counterService = new CounterServiceImpl();
@@ -125,6 +139,7 @@ public class MainController
     private Label toLabel = new Label();
     private DatePicker fromDatePicker;
     private DatePicker toDatePicker;
+    private Task importTask;
 	
 	public void setMainApp(MainApp mainApp) {
 	    this.mainApp = mainApp;
@@ -166,10 +181,20 @@ public class MainController
         storeFilterChoice.setItems(storesList);
         goodsFilterChoice.setItems(FXCollections.observableArrayList(goodsService.getAllGoodsNames()));
 
+        //progressBar.setVisible(false);
+        //progressIndicator.setVisible(false);
+
         containerChoice.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observableValue, String s, String s2) {
                 fillContainerTable(s2);
+            }
+        });
+
+        searchTextField.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String s, String s2) {
+                searchField(s2);
             }
         });
     }
@@ -356,49 +381,22 @@ public class MainController
     }
 
     @FXML protected void onLoadCounters() {
-
         FileChooser fileChooser = new FileChooser();
         ExtensionFilter filter = new ExtensionFilter("MS Office Excell files", "*.xls", "*.xlsx");
         fileChooser.getExtensionFilters().add(filter);
         File file = fileChooser.showOpenDialog(primaryStage);
-        mainTabPane.setDisable(true);
-        List<Counter> counterList = new ArrayList<>();
-        List<CommodityCirculation> circulationList = new ArrayList<>();
-        if (file != null) {
-            Map<Integer, List<Object>> data = new HashMap<>(WorkWithExcel.readFromExcell(file));
-            for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
-                Goods goods;
-                Counter counter = new Counter();
-                CommodityCirculation circulation = new CommodityCirculation();
-                Store store;
-                goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
-                if (goods.getId() == 0) {
-                    goodsService.addGoods(new Goods(0, entry.getValue().get(0).toString(), ""));
-                    goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
-                }
-                store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
-                int count = ((Double) entry.getValue().get(2)).intValue();
-                counter.setGoods(goods);
-                counter.setStore(store);
-                counter.setCount(count);
-                circulation.setCount(count);
-                circulation.setDate(new Date());
-                circulation.setGoods(goods);
-                circulation.setStore(store);
-                circulation.setSale(false);
-                Counter counterByGoodsStore = counterService.getCounterByGoodsStore(goods, store);
-                counter.setId(counterByGoodsStore.getId());
-                if (counter.getId() > 0) {
-                    counter.setCount(counter.getCount() + counterByGoodsStore.getCount());
-                }
-                circulationList.add(circulation);
-                counterList.add(counter);
-            }
-            circulationsService.addCirculations(circulationList);
-            counterService.addOrUpdateCounterList(counterList);
-        }
-        fillContainerTable(storeChoise.getValue());
-        mainTabPane.setDisable(false);
+
+        addCount.setDisable(true);
+        importCount.setDisable(true);
+        exportCount.setDisable(true);
+        importTask = importCounters(file);
+        progressBar.progressProperty().unbind();
+        progressIndicator.progressProperty().unbind();
+        progressBar.setProgress(0);
+        progressIndicator.setProgress(0);
+        progressBar.progressProperty().bind(importTask.progressProperty());
+        progressIndicator.progressProperty().bind(importTask.progressProperty());
+        new Thread(importTask).start();
     }
 
     @FXML protected void addContainer() {
@@ -449,6 +447,10 @@ public class MainController
         }
     }
 
+    /**
+     *
+     * @param circulations
+     */
     private void fillRepotrTable(List<CommodityCirculation> circulations) {
         ObservableList<CommodityCirculation> circulationsReportList = FXCollections
                 .observableArrayList(circulations);
@@ -555,6 +557,9 @@ public class MainController
         }
     }
 
+    /**
+     *
+     */
     @FXML
     protected void showCopyright() {
         String s = System.getProperty("line.separator");
@@ -562,4 +567,86 @@ public class MainController
                 "Розробник Юрій Михалецький" + s + "email:yurik.my@gmail.com" + s +
                 "All rights reserved © Yurembo 2014.", "Про програму", "Copyright");
     }
+
+    private Task importCounters(final File file) {
+        return new Task() {
+            @Override
+            protected Object call() throws Exception {
+
+                //mainTabPane.setDisable(true);
+                updateProgress(0, 1);
+                List<Counter> counterList = new ArrayList<>();
+                List<CommodityCirculation> circulationList = new ArrayList<>();
+                if (file != null) {
+                    Map<Integer, List<Object>> data = new HashMap<>(WorkWithExcel.readFromExcell(file));
+                    updateProgress(0.05, 1);
+                    for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
+                        Goods goods;
+                        Counter counter = new Counter();
+                        CommodityCirculation circulation = new CommodityCirculation();
+                        Store store;
+                        goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
+                        if (goods.getId() == 0) {
+                            goodsService.addGoods(new Goods(0, entry.getValue().get(0).toString(), ""));
+                            goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
+                        }
+                        store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
+                        int count = ((Double) entry.getValue().get(2)).intValue();
+                        counter.setGoods(goods);
+                        counter.setStore(store);
+                        counter.setCount(count);
+                        circulation.setCount(count);
+                        circulation.setDate(new Date());
+                        circulation.setGoods(goods);
+                        circulation.setStore(store);
+                        circulation.setSale(false);
+                        Counter counterByGoodsStore = counterService.getCounterByGoodsStore(goods, store);
+                        counter.setId(counterByGoodsStore.getId());
+                        if (counter.getId() > 0) {
+                            counter.setCount(counter.getCount() + counterByGoodsStore.getCount());
+                        }
+                        circulationList.add(circulation);
+                        counterList.add(counter);
+                    }
+                    updateProgress(0.3, 1);
+                    circulationsService.addCirculations(circulationList);
+                    updateProgress(0.7, 1);
+                    counterService.addOrUpdateCounterList(counterList);
+                    updateProgress(0.95, 1);
+                }
+                fillContainerTable(storeChoise.getValue());
+                updateProgress(1, 1);
+                importCount.setDisable(false);
+                exportCount.setDisable(false);
+                addCount.setDisable(false);
+                return true;
+            }
+        };
+    }
+
+    protected void searchField(String text) {
+        if (text.length() < 2) {
+            return;
+        }
+        if(!goodsFullList.isEmpty())
+            goodsFullList.clear();
+        List<Counter> counters = new ArrayList<>();
+        if (!storeChoise.getValue().equals("Всі")) {
+            Store store = storeService.getStoreByName(storeChoise.getValue());
+            counters.addAll(counterService.searchCountersByGoods(text));
+        } else {
+            counters.addAll(counterService.searchCountersByGoods(text));
+        }
+
+        goodsFullList = FXCollections.observableList(counters);
+        counterTableView.setItems(goodsFullList);
+        goodsCounterColumnId.setCellValueFactory(new PropertyValueFactory<Counter, Long>("id"));
+        goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<Counter, String>("goodsName"));
+        goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<Counter, String>("storeName"));
+        goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<Counter, Integer>("count"));
+        counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        System.out.println(text);
+    }
+
 }

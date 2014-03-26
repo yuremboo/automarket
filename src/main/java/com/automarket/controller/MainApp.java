@@ -36,7 +36,7 @@ public class MainApp extends Application {
 		Parent rootNode = (Parent) loader.load();
         log.debug("Showing JFX scene");
         Scene scene = new Scene(rootNode);
-        scene.getStylesheets().add("/styles/styles.css");
+        //scene.getStylesheets().add("/styles/styles.css");
 
         primaryStage.setTitle("Auto");
         primaryStage.setScene(scene);

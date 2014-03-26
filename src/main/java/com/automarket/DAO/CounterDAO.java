@@ -17,4 +17,5 @@ public interface CounterDAO {
     int sale(Goods goods, Store store, int count);
     void addOrUpdateCounter(Counter counter);
     void addOrUpdateCounterList(List<Counter> counterList);
+    List<Counter> searchCountersByGoods(String s);
 }

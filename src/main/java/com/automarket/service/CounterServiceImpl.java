@@ -45,6 +45,11 @@ public class CounterServiceImpl implements CounterService {
 	}
 
     @Override
+    public List<Counter> searchCountersByGoods(String s) {
+        return counterDAO.searchCountersByGoods(s);
+    }
+
+    @Override
     public List<Counter> getCountersListByStore(Store store) {
         return counterDAO.getCountersListByStore(store);
     }
