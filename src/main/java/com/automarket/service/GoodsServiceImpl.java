@@ -12,8 +12,8 @@ public class GoodsServiceImpl implements GoodsService {
 	private GoodsDAO goodsDAO = new GoodsDAOImpl();
 
 	@Override
-	public void addGoods(Goods goods) {
-		goodsDAO.addGoods(goods);
+	public byte addGoods(Goods goods) {
+		return goodsDAO.addGoods(goods);
 	}
 	
 	@Override
@@ -35,6 +35,11 @@ public class GoodsServiceImpl implements GoodsService {
 	public Goods getGoodsByName(String name) {
 		return goodsDAO.getGoodsByName(name);
 	}
+
+    @Override
+    public List<Goods> searchGoods(String text) {
+        return goodsDAO.searchGoods(text);
+    }
 
     @Override
     public List<String> getAllGoodsNames() {

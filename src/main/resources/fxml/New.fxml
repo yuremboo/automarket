@@ -13,7 +13,7 @@
 	<children>
 		<TabPane fx:id="mainTabPane" prefHeight="435.0" prefWidth="608.0" styleClass="tabRootPane" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 			<tabs>
-				<Tab onSelectionChanged="#salesSelected" text="Продажі">
+				<Tab fx:id="salesTab" onSelectionChanged="#salesSelected" text="Продажі">
 					<content>
 						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="337.0" prefWidth="517.0">
 							<children>
@@ -68,7 +68,6 @@
 																<Insets left="5.0" />
 															</GridPane.margin>
 														</Label>
-														<TextField fx:id="goodsName" layoutX="106.0" layoutY="46.0" onAction="#getInfo" prefColumnCount="30" prefHeight="25.0" prefWidth="152.0" GridPane.columnIndex="1" />
 														<Label layoutX="14.0" layoutY="96.0" text="Кількість" GridPane.rowIndex="2">
 															<GridPane.margin>
 																<Insets left="5.0" />
@@ -96,7 +95,7 @@
 														</Button>
 														<Label fx:id="infoLabel" prefHeight="133.0" prefWidth="162.0" textOverrun="CLIP" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
 														<Label fx:id="goodsValidLabel" styleClass="errorlabel" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-														<Label fx:id="countValidLabel" styleClass="errorlabel" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+														<Label fx:id="countValidLabel" styleClass="errorlabel" GridPane.columnIndex="1" GridPane.rowIndex="3" /><ComboBox fx:id="goodsName" editable="true" onAction="#getInfo" prefHeight="25.0" prefWidth="161.0" GridPane.columnIndex="1" />
 													</children>
 													<padding>
 														<Insets left="5.0" right="5.0" />
@@ -110,7 +109,7 @@
 						</AnchorPane>
 					</content>
 				</Tab>
-				<Tab onSelectionChanged="#containerSelected" text="Контейнер">
+				<Tab fx:id="containerTab" onSelectionChanged="#containerSelected" text="Контейнер">
 					<content>
 						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="panel">
 							<children>
@@ -140,6 +139,12 @@
 											<effect>
 												<InnerShadow />
 											</effect>
+<contextMenu><ContextMenu>
+  <items>
+    <MenuItem mnemonicParsing="false" onAction="#contextSaleClick" text="Продати" />
+  </items>
+</ContextMenu>
+</contextMenu>
 										</TableView>
 									</center>
 									<top>
@@ -160,7 +165,7 @@
 						</AnchorPane>
 					</content>
 				</Tab>
-				<Tab onSelectionChanged="#goodsSelected" text="Товар">
+				<Tab fx:id="goodsTab" onSelectionChanged="#goodsSelected" text="Товар">
 					<content>
 						<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="panel">
 							<children>
@@ -216,7 +221,7 @@
 						</AnchorPane>
 					</content>
 				</Tab>
-<Tab onSelectionChanged="#goodsSelected" text="Звіти">
+<Tab fx:id="reportTab" onSelectionChanged="#goodsSelected" text="Звіти">
 <content>
 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" styleClass="panel">
 <children><BorderPane prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -266,8 +271,18 @@
 </content>
 </Tab>
 			</tabs>
-		</TabPane><ProgressIndicator fx:id="progressIndicator" prefHeight="20.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="0.0" /><ProgressBar fx:id="progressBar" maxHeight="20.0" minHeight="20.0" prefHeight="20.0" prefWidth="200.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="50.0">
-</ProgressBar><Hyperlink onAction="#showCopyright" text="© Yurembo 2014. About" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+		</TabPane>
+<HBox alignment="CENTER_LEFT" prefHeight="23.0" prefWidth="479.0" spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="175.0">
+<children><ProgressIndicator fx:id="progressIndicator" maxHeight="20.0" minHeight="20.0" prefHeight="20.0" prefWidth="35.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="0.0">
+<HBox.margin>
+<Insets bottom="2.0" />
+</HBox.margin></ProgressIndicator><ProgressBar fx:id="progressBar" minHeight="20.0" prefHeight="20.0" prefWidth="200.0" progress="0.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="50.0">
+</ProgressBar><Label fx:id="statusLabel" />
+</children>
+</HBox><Hyperlink maxWidth="170.0" minWidth="170.0" onAction="#showCopyright" prefWidth="170.0" text="© Yurembo 2014. About" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" HBox.hgrow="NEVER">
+<HBox.margin>
+<Insets />
+</HBox.margin></Hyperlink>
 	</children>
     <stylesheets>
         <URL value="@../styles/styles.css" />

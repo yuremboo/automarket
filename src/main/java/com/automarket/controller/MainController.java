@@ -39,6 +39,8 @@ import com.automarket.service.StoreServiceImpl;
 import com.automarket.utils.Validator;
 import com.automarket.utils.WorkWithExcel;
 
+import static javafx.scene.control.Dialogs.*;
+
 public class MainController
 {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
@@ -49,8 +51,16 @@ public class MainController
 
     @FXML
     private TabPane mainTabPane;
+    @FXML
+    private Tab salesTab;
+    @FXML
+    private Tab containerTab;
+    @FXML
+    private Tab goodsTab;
+    @FXML
+    private Tab reportTab;
 	@FXML
-	private TextField goodsName;
+	private ComboBox<String> goodsName;
 	@FXML
 	private Label infoLabel;
 	@FXML
@@ -121,6 +131,8 @@ public class MainController
     private Button exportCount;
     @FXML
     private TextField searchTextField;
+    @FXML
+    private Label statusLabel;
     
 	private GoodsService goodsService = new GoodsServiceImpl();
 	private CounterService counterService = new CounterServiceImpl();
@@ -140,7 +152,8 @@ public class MainController
     private DatePicker fromDatePicker;
     private DatePicker toDatePicker;
     private Task importTask;
-	
+    private SingleSelectionModel<Tab> selectionModel;
+
 	public void setMainApp(MainApp mainApp) {
 	    this.mainApp = mainApp;
 	}
@@ -150,6 +163,8 @@ public class MainController
 
     @FXML
     private void initialize() {
+        //Platform.setImplicitExit(false);
+        selectionModel = mainTabPane.getSelectionModel();
         fromLabel.setText("З");
         toLabel.setText("По");
         fromDatePicker = new DatePicker(Locale.UK);
@@ -197,6 +212,27 @@ public class MainController
                 searchField(s2);
             }
         });
+
+        selectionModel.selectedItemProperty().addListener(new ChangeListener<Tab>() {
+            @Override
+            public void changed(ObservableValue<? extends Tab> observableValue, Tab tab, Tab tab2) {
+
+            }
+        });
+
+        goodsName.getEditor().textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String s, String s2) {
+                List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(s2));
+                ObservableList<String> goodNames = FXCollections.observableArrayList();
+                for (Goods goods1:goodsList) {
+                    goodNames.add(goods1.getName());
+                }
+                goodsName.setItems(goodNames);
+            }
+        });
+
+
     }
 
     @FXML public void showAddStage() {
@@ -208,17 +244,18 @@ public class MainController
 	}
     
     @FXML protected void saleGoods() {
+
     	Store store = storeService.getStoreByName(storeChoise.getValue());
 
     	goodsValidLabel.setText("");
     	countValidLabel.setText("");
-    	boolean name = Validator.textFieldNotEmpty(goodsName, goodsValidLabel, "Заповніть поле");
+    	boolean name = Validator.textFieldNotEmpty(goodsName.getEditor(), goodsValidLabel, "Заповніть поле");
     	boolean cnt = Validator.textFieldNotEmpty(goodsCount, countValidLabel, "Заповніть поле");
     	if (!name || !cnt) {
     		return;
     	}	
     	int c = 0;
-    	String goodsNameStr = goodsName.getText();
+    	String goodsNameStr = goodsName.getValue();
     	int count = 0;
     	try {
     		count = Integer.parseInt(goodsCount.getText());
@@ -240,7 +277,7 @@ public class MainController
 		}
     	if (c > 0) {
     		circulationsService.addCirculation(commodityCirculation);
-    		goodsName.setText("");
+    		goodsName.setValue("");
     		goodsCount.setText("");
     		infoLabel.setText("Продано: " + goodsNameStr + " Кількість: " + count);
     	} else if (c == -1) {
@@ -252,7 +289,7 @@ public class MainController
     }
     
     @FXML protected void cancelSale() {
-    	goodsName.setText("");
+    	goodsName.setValue("");
     	goodsCount.setText("");
     }
 
@@ -261,10 +298,12 @@ public class MainController
     }
 
     @FXML protected void salesSelected() {
+      //  if (selectionModel.getSelectedIndex() != 0) return;
     	System.out.println("Sales...");
     }
         
     @FXML protected void goodsSelected(Event event) {
+        if (!mainTabPane.getSelectionModel().getSelectedItem().equals(goodsTab)) return;
     	log.debug("Load GOODS...");
     	if(!goodsList.isEmpty())
         	goodsList.clear();
@@ -280,13 +319,17 @@ public class MainController
     }
     
     @FXML protected void containerSelected() {
+        if (!selectionModel.getSelectedItem().equals(containerTab)) return;
     	log.debug("Containers...");
         if (containerChoice.getValue() != null && !containerChoice.getValue().equals("Всі")) {
             fillContainerTable(containerChoice.getValue());
         }
     }
 
-    private void fillContainerTable(String storeName) {
+    private synchronized void fillContainerTable(String storeName) {
+        if (storeName == null) {
+            storeName = containerChoice.getValue();
+        }
         if(!goodsFullList.isEmpty())
             goodsFullList.clear();
         List<Counter> counters = new ArrayList<>();
@@ -308,7 +351,7 @@ public class MainController
     }
     
     @FXML protected void getInfo() {
-    	String goodsNameStr = goodsName.getText();
+    	String goodsNameStr = goodsName.getValue();
     	Goods goods = goodsService.getGoodsByName(goodsNameStr);
     	if (goods != null && goods.getId() != 0) {
     		infoLabel.setText(goods.toString());
@@ -392,10 +435,12 @@ public class MainController
         importTask = importCounters(file);
         progressBar.progressProperty().unbind();
         progressIndicator.progressProperty().unbind();
+        statusLabel.textProperty().unbind();
         progressBar.setProgress(0);
         progressIndicator.setProgress(0);
         progressBar.progressProperty().bind(importTask.progressProperty());
         progressIndicator.progressProperty().bind(importTask.progressProperty());
+        statusLabel.textProperty().bind(importTask.messageProperty());
         new Thread(importTask).start();
     }
 
@@ -410,7 +455,7 @@ public class MainController
 
     @FXML protected void setAsDefault() {
         if (containerChoice.getValue().equals("Всі")) {
-            Dialogs.showWarningDialog(primaryStage, "Не можна встановити всі контейнери за замовчуванням!");
+            showWarningDialog(primaryStage, "Не можна встановити всі контейнери за замовчуванням!");
             return;
         }
         defaultStore.setDefaultStore(false);
@@ -418,7 +463,7 @@ public class MainController
         newDefault.setDefaultStore(true);
         storeService.changeDefault(defaultStore, newDefault);
         defaultStore = newDefault;
-        Dialogs.showInformationDialog(primaryStage, "Контейнер встановлено по замовчуванню");
+        showInformationDialog(primaryStage, "Контейнер встановлено по замовчуванню");
     }
 
     @FXML protected void createReport() {
@@ -490,9 +535,9 @@ public class MainController
 
         boolean result = WorkWithExcel.writeToExcell(listMap);
         if (result) {
-            Dialogs.showInformationDialog(primaryStage, "Звіт успішно експортовано в папку з програмою");
+            showInformationDialog(primaryStage, "Звіт успішно експортовано в папку з програмою");
         } else {
-            Dialogs.showErrorDialog(primaryStage, "Виникла помилка при експортуванні звіту! Зверніться до розробника");
+            showErrorDialog(primaryStage, "Виникла помилка при експортуванні звіту! Зверніться до розробника");
         }
     }
 
@@ -500,7 +545,7 @@ public class MainController
     protected void handleDeleteGoods() {
         int selectedIndex = goodsTable.getSelectionModel().getSelectedIndex();
         if (selectedIndex >= 0) {
-            Dialogs.DialogResponse dialogResponse = Dialogs.showConfirmDialog(primaryStage,
+            DialogResponse dialogResponse = showConfirmDialog(primaryStage,
                     "Ви дійсно бажаєте видалити товар? Дію не можливо буде повернути!" + goodsTable.getSelectionModel().selectedItemProperty().get().getName(),
                     "Видалити товар", "Видалення");
             if (dialogResponse.name().equals("YES")) {
@@ -508,7 +553,7 @@ public class MainController
                 goodsTable.getItems().remove(selectedIndex);
             }
         } else {
-            Dialogs.showWarningDialog(primaryStage,
+            showWarningDialog(primaryStage,
                     "Виберіть товар для видалення.",
                     "Не вибрано товару", "Не вибрано");
         }
@@ -551,9 +596,9 @@ public class MainController
 
         boolean result = WorkWithExcel.writeToExcell(listMap);
         if (result) {
-            Dialogs.showInformationDialog(primaryStage, "Дані успішно експортовано в папку з програмою");
+            showInformationDialog(primaryStage, "Дані успішно експортовано в папку з програмою");
         } else {
-            Dialogs.showErrorDialog(primaryStage, "Виникла помилка при експортуванні звіту! Зверніться до розробника");
+            showErrorDialog(primaryStage, "Виникла помилка при експортуванні звіту! Зверніться до розробника");
         }
     }
 
@@ -563,7 +608,7 @@ public class MainController
     @FXML
     protected void showCopyright() {
         String s = System.getProperty("line.separator");
-        Dialogs.showInformationDialog(primaryStage, "Програма для ведення обліку товару." + s +
+        showInformationDialog(primaryStage, "Програма для ведення обліку товару." + s +
                 "Розробник Юрій Михалецький" + s + "email:yurik.my@gmail.com" + s +
                 "All rights reserved © Yurembo 2014.", "Про програму", "Copyright");
     }
@@ -572,25 +617,44 @@ public class MainController
         return new Task() {
             @Override
             protected Object call() throws Exception {
-
-                //mainTabPane.setDisable(true);
                 updateProgress(0, 1);
                 List<Counter> counterList = new ArrayList<>();
                 List<CommodityCirculation> circulationList = new ArrayList<>();
                 if (file != null) {
-                    Map<Integer, List<Object>> data = new HashMap<>(WorkWithExcel.readFromExcell(file));
+                    LinkedHashMap<Integer, List<Object>> data = WorkWithExcel.readFromExcell(file);
                     updateProgress(0.05, 1);
+                    updateMessage("Перевірка і внесення товару...");
+                    byte b = 1;
+                    String s = new String("");
+                    Set entrySet = data.entrySet();
+                    Iterator iterator = entrySet.iterator();
+                    while (iterator.hasNext()) {
+                        System.out.println("sdssdsdsd" + iterator.next());
+                    }
+
+
                     for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
+                        if (s.equals(entry.getValue().get(0).toString())) continue;
+                        s = entry.getValue().get(0).toString();
+                        //if (entry.getValue().size() < 3 || entry.getValue().isEmpty() || entry.getValue().contains("")) continue;
                         Goods goods;
                         Counter counter = new Counter();
                         CommodityCirculation circulation = new CommodityCirculation();
                         Store store;
                         goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
-                        if (goods.getId() == 0) {
-                            goodsService.addGoods(new Goods(0, entry.getValue().get(0).toString(), ""));
+                        if (goods.getId() == 0 || goods.getName() == null) {
+                            b = goodsService.addGoods(new Goods(0, entry.getValue().get(0).toString(), ""));
                             goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
                         }
+                        if (b == 0) continue;
                         store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
+                        if (store.getId() == 0 || store.getName() == null) {
+                            updateMessage("Невірно вказаний контейнер!");
+                            continue;
+                        }
+                        if (entry.getKey() == 554) {
+                            System.out.println(553);
+                        }
                         int count = ((Double) entry.getValue().get(2)).intValue();
                         counter.setGoods(goods);
                         counter.setStore(store);
@@ -600,25 +664,35 @@ public class MainController
                         circulation.setGoods(goods);
                         circulation.setStore(store);
                         circulation.setSale(false);
+                        System.out.println(entry.getKey() + " - " + entry.getValue());
                         Counter counterByGoodsStore = counterService.getCounterByGoodsStore(goods, store);
                         counter.setId(counterByGoodsStore.getId());
                         if (counter.getId() > 0) {
                             counter.setCount(counter.getCount() + counterByGoodsStore.getCount());
                         }
-                        circulationList.add(circulation);
+                        System.out.println("A");
+                        if (circulation.getCount() > 0) {
+                            circulationList.add(circulation);
+                        }
                         counterList.add(counter);
+                        System.out.println("B");
                     }
+                    System.out.println("C");
                     updateProgress(0.3, 1);
-                    circulationsService.addCirculations(circulationList);
-                    updateProgress(0.7, 1);
+                    updateMessage("Завантаження тоару...");
                     counterService.addOrUpdateCounterList(counterList);
+                    updateProgress(0.7, 1);
+                    updateMessage("Завантаження обороту...");
+                    circulationsService.addCirculations(circulationList);
                     updateProgress(0.95, 1);
+                    updateMessage("Виведення таблиці...");
                 }
                 fillContainerTable(storeChoise.getValue());
                 updateProgress(1, 1);
                 importCount.setDisable(false);
                 exportCount.setDisable(false);
                 addCount.setDisable(false);
+                updateMessage("");
                 return true;
             }
         };
@@ -632,7 +706,6 @@ public class MainController
             goodsFullList.clear();
         List<Counter> counters = new ArrayList<>();
         if (!storeChoise.getValue().equals("Всі")) {
-            Store store = storeService.getStoreByName(storeChoise.getValue());
             counters.addAll(counterService.searchCountersByGoods(text));
         } else {
             counters.addAll(counterService.searchCountersByGoods(text));
@@ -647,6 +720,12 @@ public class MainController
         counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         System.out.println(text);
+    }
+
+    @FXML
+    protected void contextSaleClick() {
+        goodsName.setValue(counterTableView.getSelectionModel().getSelectedItem().getGoods().getName());
+        selectionModel.select(salesTab);
     }
 
 }

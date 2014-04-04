@@ -8,7 +8,6 @@ import java.util.List;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
@@ -19,21 +18,26 @@ public class GoodsDAOImpl implements GoodsDAO {
 	static Logger log = LogManager.getLogger(GoodsDAOImpl.class);
 
 	@Override
-	public void addGoods(Goods goods) {
+	public byte addGoods(Goods goods) {
 		Session session = null;
+        byte b = 1;
 		try {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
 			session.saveOrUpdate(goods);
+            session.flush();
+            session.clear();
 			session.getTransaction().commit();
 			log.info("Added new goods: " + goods);
 		} catch (Exception e) {
+            b = 0;
 			log.error("Error insert " + e);
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
 			}
 		}
+        return b;
 	}
 	
 	@Override
@@ -86,7 +90,7 @@ public class GoodsDAOImpl implements GoodsDAO {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
 			Criteria criteria = session.createCriteria(Goods.class);
-			goods.addAll(criteria.list());
+			goods = criteria.list();
 			session.getTransaction().commit();
 			log.info("Added new goods: " + goods);
 		} catch (Exception e) {
@@ -107,8 +111,9 @@ public class GoodsDAOImpl implements GoodsDAO {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
 			Criteria criteria = session.createCriteria(Goods.class);
-			criteria.add(Restrictions.or(Restrictions.like("name", name).ignoreCase()));
+			criteria.add(Restrictions.like("name", name).ignoreCase());
 			goods = (Goods) criteria.list().get(0);
+            session.getTransaction().commit();
 			log.info("" + goods);
 		} catch (Exception e) {
 			log.error("Error get by name: " + e);
@@ -120,4 +125,25 @@ public class GoodsDAOImpl implements GoodsDAO {
 		return goods;
 	}
 
+    @Override
+    public List<Goods> searchGoods(String text) {
+        Session session = null;
+        List<Goods> goods = new ArrayList<>();
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            Criteria criteria = session.createCriteria(Goods.class);
+            criteria.add(Restrictions.like("name", "%" + text + "%").ignoreCase());
+            goods = criteria.list();
+            session.getTransaction().commit();
+            log.info("Search goods: " + goods);
+        } catch (Exception e) {
+            log.error("Error insert " + e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+        return goods;
+    }
 }

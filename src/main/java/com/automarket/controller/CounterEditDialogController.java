@@ -4,17 +4,19 @@ import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
 import com.automarket.service.*;
 import com.automarket.utils.Validator;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialogs;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +26,7 @@ import java.util.List;
 public class CounterEditDialogController {
     private static final Logger log = LoggerFactory.getLogger(CounterEditDialogController.class);
     @FXML
-    private ChoiceBox<String> goodsChoice;
+    private ComboBox<String> goodsBox;
     @FXML
     private ChoiceBox<String> containerChoice;
     @FXML
@@ -44,7 +46,13 @@ public class CounterEditDialogController {
         storeNames.addAll(storeService.getAllStoresNames());
         goodNames.addAll(goodsService.getAllGoodsNames());
         containerChoice.setItems(storeNames);
-        goodsChoice.setItems(goodNames);
+        goodsBox.setItems(goodNames);
+        goodsBox.getEditor().textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String s, String s2) {
+                searchGoods(s2);
+            }
+        });
     }
 
     /**
@@ -67,7 +75,7 @@ public class CounterEditDialogController {
      */
     public void setCounter(Counter counter) {
         this.counter = counter;
-        goodsChoice.setValue(counter.getGoodsName());
+        goodsBox.setValue(counter.getGoodsName());
         containerChoice.setValue(counter.getStoreName());
         countField.setText(String.valueOf(counter.getCount()));
     }
@@ -92,7 +100,7 @@ public class CounterEditDialogController {
     private void  handleOk() {
         if (Validator.textFieldNotEmpty(countField) && Integer.valueOf(countField.getText()) > 0) {
             counter.setCount(Integer.parseInt(countField.getText()));
-            counter.setGoods(goodsService.getGoodsByName(goodsChoice.getValue()));
+            counter.setGoods(goodsService.getGoodsByName(goodsBox.getValue()));
             counter.setStore(storeService.getStoreByName(containerChoice.getValue()));
             okClicked = true;
             dialogStage.close();
@@ -107,5 +115,14 @@ public class CounterEditDialogController {
     @FXML
     private void handleCancel() {
         dialogStage.close();
+    }
+
+    private void searchGoods(String text) {
+        List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(text));
+        goodNames.clear();
+        for (Goods goods1:goodsList) {
+            goodNames.add(goods1.getName());
+        }
+        goodsBox.setItems(goodNames);
     }
 }

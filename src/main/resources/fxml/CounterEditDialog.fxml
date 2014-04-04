@@ -10,7 +10,7 @@
       <children>
         <Label text="Товар" GridPane.columnIndex="0" GridPane.rowIndex="0" />
         <Label text="Кількість" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-        <TextField fx:id="countField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" /><ChoiceBox fx:id="goodsChoice" prefHeight="25.0" prefWidth="223.0" GridPane.columnIndex="1" /><Label text="Контейнер" GridPane.rowIndex="1" /><ChoiceBox fx:id="containerChoice" prefHeight="25.0" prefWidth="222.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <TextField fx:id="countField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" /><Label text="Контейнер" GridPane.rowIndex="1" /><ChoiceBox fx:id="containerChoice" prefHeight="25.0" prefWidth="222.0" GridPane.columnIndex="1" GridPane.rowIndex="1" /><ComboBox fx:id="goodsBox" editable="true" prefHeight="25.0" prefWidth="186.0" GridPane.columnIndex="1" />
       </children>
       <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" maxWidth="114.0" minWidth="80.0" prefWidth="114.0" />

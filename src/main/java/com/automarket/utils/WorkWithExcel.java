@@ -17,10 +17,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 public class WorkWithExcel {
-	public static Map<Integer, List<Object>> readFromExcell(File file) {
-		Map<Integer, List<Object>> result = new HashMap<Integer, List<Object>>();
+	public synchronized static LinkedHashMap<Integer, List<Object>> readFromExcell(File file) {
+		LinkedHashMap<Integer, List<Object>> result = new LinkedHashMap<>();
 		List<Object> list = new ArrayList<>();
-		Object object = new Object();
+		Object object;
 		try {
 			FileInputStream inputStream = new FileInputStream(file);
 			String ext = FilenameUtils.getExtension(file.getName());
@@ -57,17 +57,21 @@ public class WorkWithExcel {
 						object = null;
 						break;
 					}
-					list.add(object);
+                    list.add(object);
 				}
-				result.put(i, new ArrayList<>(list));
+                if (!list.contains(null) && !list.contains("") && list.size() >= 3) {
+				    result.put(i, new ArrayList<>(list));
+                    i++;
+                }
 				list.clear();
-				i++;
 				System.out.println("");
 			}
 			inputStream.close();
 		} catch (IOException exception) {
-			exception.printStackTrace();
-		}
+			System.err.println(exception);
+		} catch (Exception e) {
+            System.err.println(e);
+        }
 		return result;
 	}
 
