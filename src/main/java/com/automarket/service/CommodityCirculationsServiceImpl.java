@@ -25,7 +25,12 @@ public class CommodityCirculationsServiceImpl implements
 		circulationDAO.addCirculations(circulations);
 	}
 
-	@Override
+    @Override
+    public void removeZeroCirculations() {
+        circulationDAO.removeZeroCirculations();
+    }
+
+    @Override
 	public List<CommodityCirculation> commodityCirculations() {
 		return circulationDAO.commodityCirculations();
 	}

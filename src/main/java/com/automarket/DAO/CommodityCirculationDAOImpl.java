@@ -12,6 +12,7 @@ import com.automarket.entity.Store;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
@@ -192,5 +193,24 @@ public class CommodityCirculationDAOImpl implements CommodityCirculationDAO {
             }
         }
         return circulations;
+    }
+
+    @Override
+    public void removeZeroCirculations() {
+        Session session = null;
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            Query query = session.createQuery("delete from CommodityCirculation C where C.count=:count").setInteger("count", 0);
+            query.executeUpdate();
+            session.getTransaction().commit();
+            log.info("Removed zeros");
+        } catch (Exception e) {
+            log.error(e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
     }
 }

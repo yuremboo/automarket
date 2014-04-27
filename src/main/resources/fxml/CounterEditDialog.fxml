@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.*?>
+<?import java.net.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="rootPane" prefHeight="185.0" prefWidth="321.0" styleClass="main-panel" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.automarket.controller.CounterEditDialogController">
+<AnchorPane id="rootPane" prefHeight="185.0" prefWidth="321.0" styleClass="panel" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.automarket.controller.CounterEditDialogController">
   <children>
     <GridPane prefHeight="133.0" prefWidth="301.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
       <children>
@@ -29,4 +30,7 @@
       </children>
     </HBox>
   </children>
+    <stylesheets>
+        <URL value="@../styles/styles.css" />
+    </stylesheets>
 </AnchorPane>

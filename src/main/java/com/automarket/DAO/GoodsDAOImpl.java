@@ -9,6 +9,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import com.automarket.entity.Goods;
@@ -41,13 +42,14 @@ public class GoodsDAOImpl implements GoodsDAO {
 	}
 	
 	@Override
-	public void addGoodsList(List<Goods> goods) {
+	public byte addGoodsList(List<Goods> goods) {
 		Session session = null;
+        byte result = 0;
 		try {
 			session = getSessionFactory().openSession();
 			session.beginTransaction();
 			for (Goods good : goods) {
-				session.save(good);
+				session.saveOrUpdate(good);
 				if (session.isDirty()) {
 					session.flush();
 					session.clear();
@@ -56,12 +58,14 @@ public class GoodsDAOImpl implements GoodsDAO {
 			session.getTransaction().commit();
 			log.info("Added new goods: " + goods);
 		} catch (Exception e) {
+            result = 1;
 			log.error("Error insert " + e);
 		} finally {
 			if (session != null && session.isOpen()) {
 				session.close();
 			}
 		}
+        return result;
 	}
 
 	@Override
@@ -145,5 +149,26 @@ public class GoodsDAOImpl implements GoodsDAO {
             }
         }
         return goods;
+    }
+
+    @Override
+    public Integer getMaxIdentity() {
+        Session session = null;
+        Integer max = null;
+        try {
+            session = getSessionFactory().openSession();
+            session.beginTransaction();
+            Criteria criteria = session.createCriteria(Goods.class);
+            criteria.setProjection(Projections.max("analog"));
+            max = (Integer) criteria.list().get(0);
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        } finally {
+            if (session != null && session.isOpen()) {
+                session.close();
+            }
+        }
+        return max;
     }
 }

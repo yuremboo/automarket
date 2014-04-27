@@ -121,20 +121,29 @@ public class MainApp extends Application {
         }
     }
 
-    public void showLoading() {
+    public boolean showSetIdentityDialog(Goods goods) {
+        log.info("Showing identity dialog");
         try {
-            String fxmlFile = "/fxml/LoadingDialog.fxml";
+            String fxmlFile = "/fxml/SetIdentityDialog.fxml";
             FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
             Parent rootNode = (Parent) loader.load();
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("Loading...");
+            dialogStage.setTitle("Add identity");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(primaryStage);
             Scene scene = new Scene(rootNode);
             dialogStage.setScene(scene);
+
+            SetIdentityController identityController = loader.getController();
+            identityController.setDialogStage(dialogStage);
+            identityController.setEthalonGoods(goods);
+
             dialogStage.showAndWait();
+            return identityController.isOkClicked();
         } catch (IOException e) {
             log.error(e.getMessage());
+            return false;
         }
     }
+
 }

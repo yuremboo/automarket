@@ -7,6 +7,10 @@
     -fx-effect: dropshadow( gaussian , rgba(255,255,255,0.5) , 0,0,0,1 );
 }
 
+.combo-box:cell-selection {
+    -fx-cursor: hand;
+}
+
 .errorlabel {
     -fx-font-size: 12px;
     -fx-font-weight: bold;

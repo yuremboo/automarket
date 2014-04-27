@@ -1,5 +1,7 @@
 package com.automarket.entity;
 
+import org.hibernate.annotations.Cascade;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -53,7 +55,8 @@ public class Counter {
 		this.id = id;
 	}
 
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+	@ManyToOne(fetch = FetchType.EAGER)
+    @Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	public Goods getGoods() {
 		return goods;
 	}

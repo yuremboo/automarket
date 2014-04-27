@@ -40,6 +40,7 @@ public class CounterEditDialogController {
     private boolean okClicked = false;
     private ObservableList<String> goodNames = FXCollections.observableArrayList();
     private ObservableList<String> storeNames = FXCollections.observableArrayList();
+    private boolean aBoolean = true;
 
     @FXML
     private void initialize() {
@@ -47,12 +48,15 @@ public class CounterEditDialogController {
         goodNames.addAll(goodsService.getAllGoodsNames());
         containerChoice.setItems(storeNames);
         goodsBox.setItems(goodNames);
-        goodsBox.getEditor().textProperty().addListener(new ChangeListener<String>() {
+
+        goodsBox.getEditor().focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
-            public void changed(ObservableValue<? extends String> observableValue, String s, String s2) {
-                searchGoods(s2);
+            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2) {
+                if (aBoolean2) searchGoods(goodsBox.getValue());
             }
         });
+
+
     }
 
     /**
@@ -99,8 +103,14 @@ public class CounterEditDialogController {
     @FXML
     private void  handleOk() {
         if (Validator.textFieldNotEmpty(countField) && Integer.valueOf(countField.getText()) > 0) {
+            Goods goods1 = goodsService.getGoodsByName(goodsBox.getValue());
+            if (goods1.getId() == 0) {
+                goods1.setName(goodsBox.getValue());
+                goods1.setDescription("");
+                goodsService.addGoods(goods1);
+            }
             counter.setCount(Integer.parseInt(countField.getText()));
-            counter.setGoods(goodsService.getGoodsByName(goodsBox.getValue()));
+            counter.setGoods(goodsService.getGoodsByName(goods1.getName()));
             counter.setStore(storeService.getStoreByName(containerChoice.getValue()));
             okClicked = true;
             dialogStage.close();
@@ -117,8 +127,8 @@ public class CounterEditDialogController {
         dialogStage.close();
     }
 
-    private void searchGoods(String text) {
-        List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(text));
+    protected void searchGoods(String s) {
+        List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(s));
         goodNames.clear();
         for (Goods goods1:goodsList) {
             goodNames.add(goods1.getName());

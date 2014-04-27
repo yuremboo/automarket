@@ -21,6 +21,7 @@ public class Goods {
 	private long id;
 	private String name;
 	private String description;
+    private int analog;
 	private Set<Counter> counters = new HashSet<>();
 	private Set<CommodityCirculation> commodityCirculations = new HashSet<>();
 	
@@ -85,6 +86,15 @@ public class Goods {
 		this.commodityCirculations = commodityCirculations;
 	}
 
+    @Column(name = "analog", columnDefinition = "int default 0")
+    public int getAnalog() {
+        return analog;
+    }
+
+    public void setAnalog(int analog) {
+        this.analog = analog;
+    }
+
 	@Override
 	public String toString() {
 		return "Goods [id=" + id + ", name=" + name + ", description="
@@ -125,6 +135,4 @@ public class Goods {
 			return false;
 		return true;
 	}
-
-	
 }

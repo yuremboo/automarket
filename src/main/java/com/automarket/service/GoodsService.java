@@ -9,7 +9,8 @@ public interface GoodsService {
 	void remove(Goods goods);
 	List<Goods> getAllGoods();
 	Goods getGoodsByName(String name);
-	void addGoodsList(List<Goods> goods);
+	byte addGoodsList(List<Goods> goods);
     List<Goods> searchGoods(String text);
     List<String> getAllGoodsNames();
+    Integer getMaxIdentity();
 }

@@ -12,7 +12,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -152,6 +151,8 @@ public class MainController
     private DatePicker fromDatePicker;
     private DatePicker toDatePicker;
     private Task importTask;
+    private Task formatDb;
+    private Task formatReports;
     private SingleSelectionModel<Tab> selectionModel;
 
 	public void setMainApp(MainApp mainApp) {
@@ -219,7 +220,7 @@ public class MainController
 
             }
         });
-
+/*
         goodsName.getEditor().textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observableValue, String s, String s2) {
@@ -231,14 +232,27 @@ public class MainController
                 goodsName.setItems(goodNames);
             }
         });
-
-
+*/
+        goodsName.getEditor().focusedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2) {
+                if (aBoolean2) {
+                    List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(goodsName.getValue()));
+                    ObservableList<String> goodNames = FXCollections.observableArrayList();
+                    for (Goods goods1:goodsList) {
+                        goodNames.add(goods1.getName());
+                    }
+                    goodsName.setItems(goodNames);
+                }
+            }
+        });
     }
 
     @FXML public void showAddStage() {
 		Goods goods = new Goods();
 		boolean okClicked = mainApp.showGoodsEditDialog(goods);
 		if (okClicked) {
+            goods.setName(goods.getName().replaceAll("\\s+", ""));
 			goodsService.addGoods(goods);
 		}
 	}
@@ -636,15 +650,16 @@ public class MainController
                     for (Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
                         if (s.equals(entry.getValue().get(0).toString())) continue;
                         s = entry.getValue().get(0).toString();
-                        //if (entry.getValue().size() < 3 || entry.getValue().isEmpty() || entry.getValue().contains("")) continue;
+                        String goodsName;
                         Goods goods;
                         Counter counter = new Counter();
                         CommodityCirculation circulation = new CommodityCirculation();
                         Store store;
-                        goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
+                        goods = goodsService.getGoodsByName(
+                                entry.getValue().get(0).toString().replaceAll("\\s+", ""));
                         if (goods.getId() == 0 || goods.getName() == null) {
-                            b = goodsService.addGoods(new Goods(0, entry.getValue().get(0).toString(), ""));
-                            goods = goodsService.getGoodsByName(entry.getValue().get(0).toString());
+                            b = goodsService.addGoods(new Goods(0, entry.getValue().get(0).toString().replaceAll("\\s+", ""), ""));
+                            goods = goodsService.getGoodsByName(entry.getValue().get(0).toString().replaceAll("\\s+", ""));
                         }
                         if (b == 0) continue;
                         store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
@@ -728,4 +743,102 @@ public class MainController
         selectionModel.select(salesTab);
     }
 
+    @FXML
+    protected void formatGoods() {
+        mainTabPane.setDisable(true);
+        formatDb = formatDb();
+        progressBar.progressProperty().unbind();
+        progressIndicator.progressProperty().unbind();
+        statusLabel.textProperty().unbind();
+        progressBar.setProgress(0);
+        progressIndicator.setProgress(0);
+        progressBar.progressProperty().bind(formatDb.progressProperty());
+        progressIndicator.progressProperty().bind(formatDb.progressProperty());
+        statusLabel.textProperty().bind(formatDb.messageProperty());
+        new Thread(formatDb).start();
+    }
+
+    @FXML
+    protected void formatReports() {
+        mainTabPane.setDisable(true);
+        formatReports = formatDbReports();
+        progressBar.progressProperty().unbind();
+        progressIndicator.progressProperty().unbind();
+        statusLabel.textProperty().unbind();
+        progressBar.setProgress(0);
+        progressIndicator.setProgress(0);
+        progressBar.progressProperty().bind(formatReports.progressProperty());
+        progressIndicator.progressProperty().bind(formatReports.progressProperty());
+        statusLabel.textProperty().bind(formatReports.messageProperty());
+        new Thread(formatReports).start();
+    }
+
+    private Task formatDb() {
+        return new Task() {
+            @Override
+            protected Object call() throws Exception {
+                updateProgress(0.05, 1);
+                updateMessage("Зчитування товару...");
+                List<Goods> goodses = new ArrayList<>(goodsService.getAllGoods());
+                updateMessage("Форматування...");
+                updateProgress(0.1, 1);
+                for (Goods goods:goodses) {
+                    goods.setName(goods.getName().replaceAll("\\s+",""));
+                }
+                updateProgress(0.3, 1);
+                updateMessage("Занесення в базу...");
+                byte b = goodsService.addGoodsList(goodses);
+                if (b < 1) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            Dialogs.showInformationDialog(primaryStage, "Товар відформатовано успішно!", "Готово");
+                        }
+                    });
+                    updateMessage("Готово...");
+                } else {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            Dialogs.showErrorDialog(primaryStage, "Помилка при форматуванні! Спробуйте спочатку видалити всі повтори товару вручну",
+                                    "Помилка при форматуванні!", "Помилка");
+                        }
+                    });
+                    updateMessage("Помилка!");
+                }
+                updateProgress(1, 1);
+                mainTabPane.setDisable(false);
+                return true;
+            }
+        };
+    }
+
+    private Task formatDbReports() {
+        return new Task() {
+            @Override
+            protected Object call() throws Exception {
+                updateProgress(0.05, 1);
+                updateMessage("Зчитування товару...");
+                circulationsService.removeZeroCirculations();
+                updateProgress(1, 1);
+                updateMessage("");
+                mainTabPane.setDisable(false);
+                return true;
+            }
+        };
+    }
+
+    @FXML
+    protected void setIdentityClick() {
+        System.out.println("ssssssss");
+        Goods selectedGoods = counterTableView.getSelectionModel().getSelectedItem().getGoods();
+        if (selectedGoods != null) {
+            boolean okClicked = mainApp.showSetIdentityDialog(selectedGoods);
+            if (okClicked) {
+                goodsService.addGoods(selectedGoods);
+                Dialogs.showInformationDialog(primaryStage, "Відповідність встановлено");
+                //refreshTable();
+            }
+        }
+    }
 }

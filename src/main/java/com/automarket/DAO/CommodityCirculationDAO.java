@@ -16,4 +16,5 @@ public interface CommodityCirculationDAO {
 	List<CommodityCirculation> commodityCirculationsByMonth();
     List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store store, Goods goods, Boolean issale);
     List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store filterStore, Goods filterGoods);
+    void removeZeroCirculations();
 }

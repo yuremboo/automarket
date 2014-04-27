@@ -9,6 +9,7 @@ public interface GoodsDAO {
 	void remove(Goods goods);
 	List<Goods> getAllGoods();
 	Goods getGoodsByName(String name);
-	void addGoodsList(List<Goods> goods);
+	byte addGoodsList(List<Goods> goods);
     List<Goods> searchGoods(String text);
+    Integer getMaxIdentity();
 }

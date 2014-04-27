@@ -1,5 +1,9 @@
 package com.automarket.entity;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.NamedQueries;
+import org.hibernate.annotations.NamedQuery;
+
 import java.util.Date;
 
 import javax.persistence.CascadeType;
@@ -12,6 +16,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+@NamedQueries({
+        @NamedQuery(
+                name = "removeZeros",
+                query = "delete from CommodityCirculation C where C.count=:count"
+        )
+}
+)
 @Entity
 @Table(name="COMMODITY_CIRCULATION")
 public class CommodityCirculation {
@@ -55,7 +66,8 @@ public class CommodityCirculation {
 		this.date = date;
 	}
 	
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+	@ManyToOne(fetch = FetchType.EAGER)
+    @Cascade({org.hibernate.annotations.CascadeType.SAVE_UPDATE})
 	public Goods getGoods() {
 		return goods;
 	}

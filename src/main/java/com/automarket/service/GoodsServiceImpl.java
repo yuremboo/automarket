@@ -17,8 +17,8 @@ public class GoodsServiceImpl implements GoodsService {
 	}
 	
 	@Override
-	public void addGoodsList(List<Goods> goods) {
-		goodsDAO.addGoodsList(goods);
+	public byte addGoodsList(List<Goods> goods) {
+		return goodsDAO.addGoodsList(goods);
 	}
 
 	@Override
@@ -50,6 +50,11 @@ public class GoodsServiceImpl implements GoodsService {
             goodsNames.add(goods.getName());
         }
         return goodsNames;
+    }
+
+    @Override
+    public Integer getMaxIdentity() {
+        return goodsDAO.getMaxIdentity();
     }
 
 }
