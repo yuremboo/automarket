@@ -1,36 +1,35 @@
 package com.automarket.controller;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.Dialogs;
-import javafx.scene.control.TextField;
-import javafx.stage.Stage;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.automarket.entity.Goods;
 import com.automarket.service.GoodsService;
 import com.automarket.service.GoodsServiceImpl;
 import com.automarket.utils.Validator;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GoodsEditDialogController {
+
 	private static final Logger log = LoggerFactory.getLogger(GoodsEditDialogController.class);
-	
+
 	@FXML
 	private TextField nameField;
 	@FXML
 	private TextField descField;
-	
+
 	private Stage dialogStage;
 	private Goods goods;
 	private GoodsService goodsService = new GoodsServiceImpl();
 	private boolean okClicked = false;
-	
+
 	@FXML
 	private void initialize() {
-		
+
 	}
-	
+
 	/**
 	 * Sets the stage of this dialog.
 	 * 
@@ -65,13 +64,17 @@ public class GoodsEditDialogController {
 	 */
 	@FXML
 	private void handleOk() {
-		if (Validator.textFieldNotEmpty(nameField)) {
+		if(Validator.textFieldNotEmpty(nameField)) {
 			goods.setName(nameField.getText());
 			goods.setDescription(descField.getText());
 			okClicked = true;
 			dialogStage.close();
 		} else {
-			Dialogs.showErrorDialog(dialogStage, "Заповніть поле назва");
+			Alert alert = new Alert(Alert.AlertType.ERROR);
+			alert.initOwner(dialogStage);
+			alert.setTitle("Увага!");
+			alert.setContentText("Заповніть поле назва!");
+			alert.showAndWait();
 		}
 	}
 
@@ -82,7 +85,5 @@ public class GoodsEditDialogController {
 	private void handleCancel() {
 		dialogStage.close();
 	}
-	
-	
 
 }

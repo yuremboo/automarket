@@ -2,148 +2,159 @@ package com.automarket.controller;
 
 import java.io.IOException;
 
+import com.automarket.HibernateConfig;
 import com.automarket.entity.Counter;
 import com.automarket.entity.Store;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.automarket.entity.Goods;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 public class MainApp extends Application {
 
-    private static final Logger log = LoggerFactory.getLogger(MainApp.class);
+	private static final Logger log = LoggerFactory.getLogger(MainApp.class);
 
-    private Stage primaryStage;
-    
-    public static void main(String[] args) throws Exception {
-        launch(args);
-    }
+	private Stage primaryStage;
 
-    public void start(Stage primaryStage) throws Exception {
+	public static void main(String[] args) throws Exception {
+		launch(args);
+	}
 
-        log.info("Starting Hello JavaFX and Maven demonstration application");
+	public void start(Stage primaryStage) throws Exception {
 
-        String fxmlFile = "/fxml/New.fxml";
-        log.debug("Loading FXML for main view from: {}", fxmlFile);
-        FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
-		Parent rootNode = (Parent) loader.load();
-        log.debug("Showing JFX scene");
-        Scene scene = new Scene(rootNode);
-        //scene.getStylesheets().add("/styles/styles.css");
+		log.info("Starting Hello JavaFX and Maven demonstration application");
+		Platform.setImplicitExit(true);
 
-        primaryStage.setTitle("Auto");
-        primaryStage.setScene(scene);
-        this.primaryStage = primaryStage;
-        MainController controller = loader.getController();
-        controller.setMainApp(this);
-        controller.setDialogStage(primaryStage);
-        primaryStage.show();
-    }
-    
-    public boolean showGoodsEditDialog(Goods goods) {
-    	log.info("Showing goods dialog");
-    	try {
-    		String fxmlFile = "/fxml/GoodsEditDialog.fxml";
-    		FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
-    		Parent rootNode = (Parent) loader.load();
-    		Stage dialogStage = new Stage();
-    		dialogStage.setTitle("Edit Goods");
-    		dialogStage.initModality(Modality.WINDOW_MODAL);
-    		dialogStage.initOwner(primaryStage);
-    		Scene scene = new Scene(rootNode);
-    		dialogStage.setScene(scene);
-    		
-    		GoodsEditDialogController goodsEditDialogController = loader.getController();
-    		goodsEditDialogController.setDialogStage(dialogStage);
-    		goodsEditDialogController.setGoods(goods);
-    		
-    		dialogStage.showAndWait();
-    		return goodsEditDialogController.isOkClicked();
-    	} catch (IOException e) {
-    		log.error(e.getMessage());
-    		return false;
-    	}
-    }
+		ApplicationContext context = new AnnotationConfigApplicationContext(HibernateConfig.class);
+		//context.getBean(HibernateConfig.class);
 
-    public boolean showCounterEditDialog(Counter counter) {
-        log.info("Showing counter dialog");
+		String fxmlFile = "/fxml/New.fxml";
+		log.debug("Loading FXML for main view from: {}", fxmlFile);
+		FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+		//FXMLLoader loader = new FXMLLoader();
+		loader.setControllerFactory(context::getBean);
+		Parent rootNode = loader.load();
+		log.debug("Showing JFX scene");
+		Scene scene = new Scene(rootNode);
+		// scene.getStylesheets().add("/styles/styles.css");
 
-        try {
-            String fxmlFile = "/fxml/CounterEditDialog.fxml";
-            FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
-            Parent rootNode = (Parent) loader.load();
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Edit Goods");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage);
-            Scene scene = new Scene(rootNode);
-            dialogStage.setScene(scene);
-            CounterEditDialogController counterEditDialogController = loader.getController();
-            counterEditDialogController.setDialogStage(dialogStage);
-            counterEditDialogController.setCounter(counter);
-            dialogStage.showAndWait();
-            return counterEditDialogController.isOkClicked();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return false;
-        }
-    }
+		primaryStage.setTitle("Auto");
+		primaryStage.setScene(scene);
+		this.primaryStage = primaryStage;
+		MainController controller = loader.getController();
+		controller.setMainApp(this);
+		controller.setDialogStage(primaryStage);
+		primaryStage.show();
+	}
 
-    public boolean showStoreAddDialog(Store store) {
-        log.info("Showing store dialog");
-        try {
-            String fxmlFile = "/fxml/StoreAddDialog.fxml";
-            FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
-            Parent rootNode = (Parent) loader.load();
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Add store");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage);
-            Scene scene = new Scene(rootNode);
-            dialogStage.setScene(scene);
+	public boolean showGoodsEditDialog(Goods goods) {
+		log.info("Showing goods dialog");
+		try {
+			String fxmlFile = "/fxml/GoodsEditDialog.fxml";
+			FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+			Parent rootNode = loader.load();
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("Edit Goods");
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(primaryStage);
+			Scene scene = new Scene(rootNode);
+			dialogStage.setScene(scene);
 
-            StoreAddDialogController storeAddDialogController = loader.getController();
-            storeAddDialogController.setDialogStage(dialogStage);
-            storeAddDialogController.setStore(store);
+			GoodsEditDialogController goodsEditDialogController = loader.getController();
+			goodsEditDialogController.setDialogStage(dialogStage);
+			goodsEditDialogController.setGoods(goods);
 
-            dialogStage.showAndWait();
-            return storeAddDialogController.isOkClicked();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return false;
-        }
-    }
+			dialogStage.showAndWait();
+			return goodsEditDialogController.isOkClicked();
+		} catch(IOException e) {
+			log.error(e.getMessage());
+			return false;
+		}
+	}
 
-    public boolean showSetIdentityDialog(Goods goods) {
-        log.info("Showing identity dialog");
-        try {
-            String fxmlFile = "/fxml/SetIdentityDialog.fxml";
-            FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
-            Parent rootNode = (Parent) loader.load();
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Add identity");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(primaryStage);
-            Scene scene = new Scene(rootNode);
-            dialogStage.setScene(scene);
+	public boolean showCounterEditDialog(Counter counter) {
+		log.info("Showing counter dialog");
 
-            SetIdentityController identityController = loader.getController();
-            identityController.setDialogStage(dialogStage);
-            identityController.setEthalonGoods(goods);
+		try {
+			String fxmlFile = "/fxml/CounterEditDialog.fxml";
+			FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+			Parent rootNode = loader.load();
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("Edit Goods");
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(primaryStage);
+			Scene scene = new Scene(rootNode);
+			dialogStage.setScene(scene);
+			CounterEditDialogController counterEditDialogController = loader.getController();
+			counterEditDialogController.setDialogStage(dialogStage);
+			counterEditDialogController.setCounter(counter);
+			dialogStage.showAndWait();
+			return counterEditDialogController.isOkClicked();
+		} catch(IOException e) {
+			log.error(e.getMessage());
+			return false;
+		}
+	}
 
-            dialogStage.showAndWait();
-            return identityController.isOkClicked();
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            return false;
-        }
-    }
+	public boolean showStoreAddDialog(Store store) {
+		log.info("Showing store dialog");
+		try {
+			String fxmlFile = "/fxml/StoreAddDialog.fxml";
+			FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+			Parent rootNode = loader.load();
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("Add store");
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(primaryStage);
+			Scene scene = new Scene(rootNode);
+			dialogStage.setScene(scene);
+
+			StoreAddDialogController storeAddDialogController = loader.getController();
+			storeAddDialogController.setDialogStage(dialogStage);
+			storeAddDialogController.setStore(store);
+
+			dialogStage.showAndWait();
+			return storeAddDialogController.isOkClicked();
+		} catch(IOException e) {
+			log.error(e.getMessage());
+			return false;
+		}
+	}
+
+	public boolean showSetIdentityDialog(Goods goods) {
+		log.info("Showing identity dialog");
+		try {
+			String fxmlFile = "/fxml/SetIdentityDialog.fxml";
+			FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+			Parent rootNode = loader.load();
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("Add identity");
+			dialogStage.initModality(Modality.WINDOW_MODAL);
+			dialogStage.initOwner(primaryStage);
+			Scene scene = new Scene(rootNode);
+			dialogStage.setScene(scene);
+
+			SetIdentityController identityController = loader.getController();
+			identityController.setDialogStage(dialogStage);
+			identityController.setEthalonGoods(goods);
+
+			dialogStage.showAndWait();
+			return identityController.isOkClicked();
+		} catch(IOException e) {
+			log.error(e.getMessage());
+			return false;
+		}
+	}
 
 }

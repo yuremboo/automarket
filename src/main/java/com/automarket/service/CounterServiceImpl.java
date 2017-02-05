@@ -2,12 +2,14 @@ package com.automarket.service;
 
 import java.util.List;
 
-import com.automarket.DAO.CounterDAO;
-import com.automarket.DAO.CounterDAOImpl;
+import com.automarket.persistence.DAO.CounterDAO;
+import com.automarket.persistence.DAO.CounterDAOImpl;
 import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CounterServiceImpl implements CounterService {
 	
 	CounterDAO counterDAO = new CounterDAOImpl();

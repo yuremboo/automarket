@@ -1,4 +1,4 @@
-package com.automarket.DAO;
+package com.automarket.persistence.DAO;
 
 import static com.automarket.utils.HibernateUtil.getSessionFactory;
 

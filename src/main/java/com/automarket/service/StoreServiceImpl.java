@@ -2,54 +2,72 @@ package com.automarket.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.automarket.DAO.StoreDAO;
-import com.automarket.DAO.StoreDAOImpl;
+import com.automarket.persistence.DAO.StoreDAO;
+import com.automarket.persistence.DAO.StoreDAOImpl;
 import com.automarket.entity.Store;
+import com.automarket.persistence.repository.StoreJpaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class StoreServiceImpl implements StoreService {
 
-	StoreDAO storeDAO = new StoreDAOImpl();
-	
+	private final StoreJpaRepository storeJpaRepository;
+
+	@Autowired
+	public StoreServiceImpl(StoreJpaRepository storeJpaRepository) {
+		this.storeJpaRepository = storeJpaRepository;
+	}
+
+	@Transactional
 	@Override
 	public void addStore(Store store) {
-		storeDAO.addStore(store);
+		storeJpaRepository.saveAndFlush(store);
 	}
 
+	@Transactional
 	@Override
-	public void remove(int id) {
-		storeDAO.remove(id);
+	public void remove(Integer id) {
+		storeJpaRepository.delete(id);
 	}
 
+	@Transactional
 	@Override
 	public List<Store> getAllStores() {
-		return storeDAO.getAllStores();
+		return storeJpaRepository.findAll();
 	}
 
+	@Transactional
 	@Override
 	public Store getStoreByName(String name) {
-		return storeDAO.getStoreByName(name);
+		return storeJpaRepository.getFirstByName(name);
 	}
-	
+
+	@Transactional
 	@Override
 	public Store getDefault() {
-		return storeDAO.getDefault();
+		return storeJpaRepository.findByDefaultStoreTrue();
 	}
 	
 	@Override
 	public List<String> getAllStoresNames() {
 		List<Store> stores = new ArrayList<>();
-		stores.addAll(storeDAO.getAllStores());
-		List<String> storeNames = new ArrayList<>();
-		for (Store store : stores) {
-			storeNames.add(store.getName());
-		}
-		return storeNames;
+		stores.addAll(storeJpaRepository.findAll());
+		return stores.stream().map(Store::getName).collect(Collectors.toList());
 	}
 
+	@Transactional
     @Override
-    public void changeDefault(Store oldDefault, Store newDefault) {
-        storeDAO.changeDefault(oldDefault, newDefault);
+    public Store changeDefault(String newDefault) {
+	    Store storeByName = getStoreByName(newDefault);
+	    storeByName.setDefaultStore(true);
+	    Store activeStore = getDefault();
+	    activeStore.setDefaultStore(false);
+	    storeJpaRepository.save(activeStore);
+	    return storeJpaRepository.saveAndFlush(storeByName);
     }
 
 }

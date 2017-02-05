@@ -1,4 +1,4 @@
-package com.automarket.DAO;
+package com.automarket.persistence.DAO;
 
 import static com.automarket.utils.HibernateUtil.getSessionFactory;
 
@@ -11,8 +11,6 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
-import com.automarket.entity.Counter;
-import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
 
 public class StoreDAOImpl implements StoreDAO {

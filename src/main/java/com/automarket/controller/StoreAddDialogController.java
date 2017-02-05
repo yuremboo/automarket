@@ -1,14 +1,11 @@
 package com.automarket.controller;
 
-import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
-import com.automarket.service.GoodsService;
-import com.automarket.service.GoodsServiceImpl;
 import com.automarket.service.StoreService;
 import com.automarket.service.StoreServiceImpl;
 import com.automarket.utils.Validator;
 import javafx.fxml.FXML;
-import javafx.scene.control.Dialogs;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -72,7 +69,11 @@ public class StoreAddDialogController {
 			okClicked = true;
 			dialogStage.close();
 		} else {
-			Dialogs.showErrorDialog(dialogStage, "Заповніть поле назва");
+			Alert alert = new Alert(Alert.AlertType.ERROR);
+			alert.initOwner(dialogStage);
+			alert.setTitle("Помилка");
+			alert.setContentText("Заповніть поле назва");
+			alert.showAndWait();
 		}
 	}
 

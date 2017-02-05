@@ -37,19 +37,13 @@ public class SetIdentityController {
         goodsIdentity.setItems(goodNames);
         goodsEthalon.setValue(ethalonGoods.getName());
 
-        goodsEthalon.getEditor().focusedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2) {
-                if (aBoolean2 && !isLaunched) goodsEthalon.setItems(searchGoods(goodsEthalon.getValue()));
-                isLaunched = false;
-            }
+        goodsEthalon.getEditor().focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
+            if (aBoolean2 && !isLaunched) goodsEthalon.setItems(searchGoods(goodsEthalon.getValue()));
+            isLaunched = false;
         });
 
-        goodsIdentity.getEditor().focusedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2) {
-                if (aBoolean2) goodsIdentity.setItems(searchGoods(goodsIdentity.getValue()));
-            }
+        goodsIdentity.getEditor().focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
+            if (aBoolean2) goodsIdentity.setItems(searchGoods(goodsIdentity.getValue()));
         });
     }
 
