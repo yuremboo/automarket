@@ -25,6 +25,13 @@ public class StoreServiceImpl implements StoreService {
 	@Transactional
 	@Override
 	public void addStore(Store store) {
+		if(store.isDefaultStore()) {
+			Store oldDefaultStore = storeJpaRepository.findByDefaultStoreTrue();
+			if(oldDefaultStore != null) {
+				oldDefaultStore.setDefaultStore(false);
+				storeJpaRepository.save(oldDefaultStore);
+			}
+		}
 		storeJpaRepository.saveAndFlush(store);
 	}
 
@@ -51,7 +58,7 @@ public class StoreServiceImpl implements StoreService {
 	public Store getDefault() {
 		return storeJpaRepository.findByDefaultStoreTrue();
 	}
-	
+
 	@Override
 	public List<String> getAllStoresNames() {
 		List<Store> stores = new ArrayList<>();
@@ -60,14 +67,14 @@ public class StoreServiceImpl implements StoreService {
 	}
 
 	@Transactional
-    @Override
-    public Store changeDefault(String newDefault) {
-	    Store storeByName = getStoreByName(newDefault);
-	    storeByName.setDefaultStore(true);
-	    Store activeStore = getDefault();
-	    activeStore.setDefaultStore(false);
-	    storeJpaRepository.save(activeStore);
-	    return storeJpaRepository.saveAndFlush(storeByName);
-    }
+	@Override
+	public Store changeDefault(String newDefault) {
+		Store activeStore = getDefault();
+		activeStore.setDefaultStore(false);
+		storeJpaRepository.save(activeStore);
+		Store storeByName = getStoreByName(newDefault);
+		storeByName.setDefaultStore(true);
+		return storeJpaRepository.saveAndFlush(storeByName);
+	}
 
 }

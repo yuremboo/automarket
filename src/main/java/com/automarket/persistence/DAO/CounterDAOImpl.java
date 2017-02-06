@@ -15,6 +15,7 @@ import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
 
+@Deprecated
 public class CounterDAOImpl implements CounterDAO {
 	
 	static Logger log = LogManager.getLogger(CounterDAOImpl.class);

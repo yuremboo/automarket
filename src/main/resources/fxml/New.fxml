@@ -183,6 +183,7 @@
 												<TableColumn fx:id="goodsColumnId" prefWidth="84.0" text="ID" />
 												<TableColumn fx:id="goodsColumnName" prefWidth="246.0" text="Назва" />
 												<TableColumn fx:id="goodsColumnDescription" prefWidth="75.0" text="Опис" />
+												<TableColumn fx:id="goodsColumnTotalItems" prefWidth="75.0" text="Кількість" />
 											</columns>
 											<columnResizePolicy>
 												<TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

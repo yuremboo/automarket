@@ -2,12 +2,14 @@ package com.automarket.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.automarket.persistence.DAO.GoodsDAO;
 import com.automarket.persistence.DAO.GoodsDAOImpl;
 import com.automarket.entity.Goods;
 import com.automarket.persistence.repository.GoodsJpaRepository;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +43,11 @@ public class GoodsServiceImpl implements GoodsService {
 
 	@Override
 	public List<Goods> getAllGoods() {
-		return goodsJpaRepository.findAll();
+		List<Goods> goodsList = goodsJpaRepository.findAll();
+		for (Goods goods:goodsList) {
+			Hibernate.initialize(goods.getCounters());
+		}
+		return goodsList;
 	}
 
 	@Override
@@ -51,7 +57,10 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     public List<Goods> searchGoods(String text) {
-        return goodsDAO.searchGoods(text);
+	    if(text == null) {
+		    text = "";
+	    }
+        return goodsJpaRepository.findByNameIgnoreCaseContaining(text);
     }
 
     @Override
@@ -61,9 +70,13 @@ public class GoodsServiceImpl implements GoodsService {
 	    return goodsList.stream().map(Goods::getName).collect(Collectors.toList());
     }
 
-    @Override
-    public Integer getMaxIdentity() {
-        return goodsDAO.getMaxIdentity();
-    }
+    @Transactional
+	@Override
+	public Set<Goods> addAnalogs(Goods goods, Set<Goods> analogs) {
+		Goods goodsFromDb = goodsJpaRepository.findOne(goods.getId());
+		goodsFromDb.getMyAnalogs().addAll(analogs);
+		goodsJpaRepository.saveAndFlush(goodsFromDb);
+	    return goodsFromDb.getAllAnalogs();
+	}
 
 }

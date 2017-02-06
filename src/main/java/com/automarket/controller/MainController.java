@@ -5,18 +5,13 @@ import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
 import com.automarket.service.CommodityCirculationsService;
-import com.automarket.service.CommodityCirculationsServiceImpl;
 import com.automarket.service.CounterService;
 import com.automarket.service.CounterServiceImpl;
 import com.automarket.service.GoodsService;
-import com.automarket.service.GoodsServiceImpl;
 import com.automarket.service.StoreService;
-import com.automarket.service.StoreServiceImpl;
 import com.automarket.utils.Validator;
 import com.automarket.utils.WorkWithExcel;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -46,7 +41,6 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 
 import java.io.File;
@@ -67,10 +61,11 @@ import java.util.stream.Collectors;
 public class MainController {
 
 	private static final Logger log = LoggerFactory.getLogger(MainController.class);
+	public static final String ALL_STORES = "Всі";
 
-	MainApp mainApp;
-	Stage primaryStage;
-	Store defaultStore = new Store();
+	private MainApp mainApp;
+	private Stage primaryStage;
+	private Store defaultStore = new Store();
 
 	@FXML
 	private TabPane mainTabPane;
@@ -108,6 +103,8 @@ public class MainController {
 	private TableColumn<Goods, String> goodsColumnName;
 	@FXML
 	private TableColumn<Goods, String> goodsColumnDescription;
+	@FXML
+	private TableColumn<Goods, Integer> goodsColumnTotalItems;
 	@FXML
 	private ChoiceBox<String> storeChoise;
 	@FXML
@@ -159,11 +156,12 @@ public class MainController {
 
 	@Autowired
 	private GoodsService goodsService;
-	private CounterService counterService = new CounterServiceImpl();
-
+	@Autowired
+	private CounterService counterService;
 	@Autowired
 	private StoreService storeService;
-	private CommodityCirculationsService circulationsService = new CommodityCirculationsServiceImpl();
+	@Autowired
+	private CommodityCirculationsService circulationsService;
 	private ObservableList<Goods> goodsList = FXCollections.observableArrayList();
 	private ObservableList<Counter> goodsFullList = FXCollections.observableArrayList();
 	private ObservableList<CommodityCirculation> circulationsList = FXCollections.observableArrayList();
@@ -205,11 +203,14 @@ public class MainController {
 
 		defaultStore = storeService.getDefault();
 		storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
-		storesList.add("Всі");
+		storesList.add(ALL_STORES);
 		storeChoise.setItems(storesList);
 		if(defaultStore != null) {
 			storeChoise.setValue(defaultStore.getName());
 			containerChoice.setValue(defaultStore.getName());
+		} else {
+			storeChoise.setValue(ALL_STORES);
+			containerChoice.setValue(ALL_STORES);
 		}
 		containerChoice.setItems(storesList);
 
@@ -223,13 +224,6 @@ public class MainController {
 		selectionModel.selectedItemProperty().addListener((observableValue, tab, tab2) -> {
 
 		});
-		/*
-		 * goodsName.getEditor().textProperty().addListener(new ChangeListener<String>() {
-		 * 
-		 * @Override public void changed(ObservableValue<? extends String> observableValue, String s, String s2) { List<Goods> goodsList = new
-		 * ArrayList<>(goodsService.searchGoods(s2)); ObservableList<String> goodNames = FXCollections.observableArrayList(); for (Goods
-		 * goods1:goodsList) { goodNames.add(goods1.getName()); } goodsName.setItems(goodNames); } });
-		 */
 		goodsName.getEditor().focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
 			if(aBoolean2) {
 				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(goodsName.getValue()));
@@ -324,9 +318,10 @@ public class MainController {
 		goods.addAll(goodsService.getAllGoods());
 		goodsList = FXCollections.observableList(goods);
 		goodsTable.setItems(goodsList);
-		goodsColumnId.setCellValueFactory(new PropertyValueFactory<Goods, Long>("id"));
-		goodsColumnName.setCellValueFactory(new PropertyValueFactory<Goods, String>("name"));
-		goodsColumnDescription.setCellValueFactory(new PropertyValueFactory<Goods, String>("description"));
+		goodsColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
+		goodsColumnName.setCellValueFactory(new PropertyValueFactory<>("name"));
+		goodsColumnDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
+		goodsColumnTotalItems.setCellValueFactory(new PropertyValueFactory<>("totalItems"));
 		goodsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
 	}
@@ -336,19 +331,17 @@ public class MainController {
 		if(!selectionModel.getSelectedItem().equals(containerTab))
 			return;
 		log.debug("Containers...");
-		if(containerChoice.getValue() != null && !containerChoice.getValue().equals("Всі")) {
-			fillContainerTable(containerChoice.getValue());
-		}
+		fillContainerTable(containerChoice.getValue());
 	}
 
-	private synchronized void fillContainerTable(String storeName) {
+	private void fillContainerTable(String storeName) {
 		if(storeName == null) {
 			storeName = containerChoice.getValue();
 		}
 		if(!goodsFullList.isEmpty())
 			goodsFullList.clear();
 		List<Counter> counters = new ArrayList<>();
-		if(!storeName.equals("Всі")) {
+		if(!storeName.equals(ALL_STORES)) {
 			Store store = storeService.getStoreByName(storeName);
 			counters.addAll(counterService.getCountersListByStore(store));
 		} else {
@@ -418,23 +411,8 @@ public class MainController {
 
 	@FXML
 	protected void showAddGoodsStage() {
-		Counter counter = new Counter();
-		boolean okClicked = mainApp.showCounterEditDialog(counter);
+		boolean okClicked = mainApp.showCounterEditDialog();
 		if(okClicked) {
-			Counter counterByGoodsStore = counterService.getCounterByGoodsStore(counter.getGoods(), counter.getStore());
-			counter.setId(counterByGoodsStore.getId());
-			CommodityCirculation circulation = new CommodityCirculation();
-			circulation.setCount(counter.getCount());
-			circulation.setDate(new Date());
-			circulation.setGoods(counter.getGoods());
-			circulation.setStore(counter.getStore());
-			circulation.setSale(false);
-			circulationsService.addCirculation(circulation);
-			if(counter.getId() > 0) {
-				counter.setCount(counter.getCount() + counterByGoodsStore.getCount());
-			}
-
-			counterService.addOrUpdateCounter(counter);
 			fillContainerTable(containerChoice.getValue());
 		}
 	}
@@ -463,17 +441,23 @@ public class MainController {
 
 	@FXML
 	protected void addContainer() {
-		Store store = new Store();
-		boolean okClicked = mainApp.showStoreAddDialog(store);
+		boolean okClicked = mainApp.showStoreAddDialog();
 		if(okClicked) {
-			storeService.addStore(store);
-			storeChoise.getItems().add(store.getName());
+			storeChoise.getItems().clear();
+			List<Store> allStores = storeService.getAllStores();
+			storeChoise.getItems().addAll(allStores.stream().map(Store::getName).collect(Collectors.toList()));
+			defaultStore = null;
+			containerChoice.setValue(ALL_STORES);
+			allStores.stream().filter(Store::isDefaultStore).forEach(store -> {
+				defaultStore = store;
+				containerChoice.setValue(store.getName());
+			});
 		}
 	}
 
 	@FXML
 	protected void setAsDefault() {
-		if(containerChoice.getValue().equals("Всі")) {
+		if(containerChoice.getValue().equals(ALL_STORES)) {
 			showWarningDialog(primaryStage, "", "Не можна встановити всі контейнери за замовчуванням!");
 			return;
 		}
@@ -684,7 +668,7 @@ public class MainController {
 						Store store;
 						goods = goodsService.getGoodsByName(entry.getValue().get(0).toString().replaceAll("\\s+", ""));
 						if(goods.getId() == 0 || goods.getName() == null) {
-							goodsService.addGoods(new Goods(0, entry.getValue().get(0).toString().replaceAll("\\s+", ""), ""));
+							goodsService.addGoods(new Goods(entry.getValue().get(0).toString().replaceAll("\\s+", ""), ""));
 							goods = goodsService.getGoodsByName(entry.getValue().get(0).toString().replaceAll("\\s+", ""));
 						}
 						store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
@@ -739,24 +723,23 @@ public class MainController {
 	}
 
 	protected void searchField(String text) {
-		if(text.length() < 2) {
+		if(!goodsFullList.isEmpty()) {
+			goodsFullList.clear();
+		}
+		List<Goods> goods = goodsService.searchGoods(text);
+		if(goods.isEmpty()) {
 			return;
 		}
-		if(!goodsFullList.isEmpty())
-			goodsFullList.clear();
 		List<Counter> counters = new ArrayList<>();
-		if(!storeChoise.getValue().equals("Всі")) {
-			counters.addAll(counterService.searchCountersByGoods(text));
+		if(ALL_STORES.equals(storeChoise.getValue())) {
+			counters.addAll(counterService.searchCountersByGoods(goods));
 		} else {
-			counters.addAll(counterService.searchCountersByGoods(text));
+			Store store = storeService.getStoreByName(storeChoise.getValue());
+			counters.addAll(counterService.searchCountersByGoodsAndStore(goods, store));
 		}
 
 		goodsFullList = FXCollections.observableList(counters);
 		counterTableView.setItems(goodsFullList);
-		goodsCounterColumnId.setCellValueFactory(new PropertyValueFactory<Counter, Long>("id"));
-		goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<Counter, String>("goodsName"));
-		goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<Counter, String>("storeName"));
-		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<Counter, Integer>("count"));
 		counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
 		System.out.println(text);
@@ -814,13 +797,13 @@ public class MainController {
 				updateProgress(0.3, 1);
 				updateMessage("Занесення в базу...");
 				goodsService.addGoodsList(goodses);
-					Platform.runLater(() -> showInformationDialog(primaryStage, "Готово", "Товар відформатовано успішно!"));
-					updateMessage("Готово...");
-//				{
-//					Platform.runLater(() -> showErrorDialog(primaryStage, "Помилка!",
-//							"Помилка при форматуванні! Спробуйте спочатку видалити всі повтори товару вручну"));
-//					updateMessage("Помилка!");
-//				}
+				Platform.runLater(() -> showInformationDialog(primaryStage, "Готово", "Товар відформатовано успішно!"));
+				updateMessage("Готово...");
+				// {
+				// Platform.runLater(() -> showErrorDialog(primaryStage, "Помилка!",
+				// "Помилка при форматуванні! Спробуйте спочатку видалити всі повтори товару вручну"));
+				// updateMessage("Помилка!");
+				// }
 				updateProgress(1, 1);
 				mainTabPane.setDisable(false);
 				return true;

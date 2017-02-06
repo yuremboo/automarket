@@ -24,6 +24,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 public class MainApp extends Application {
 
 	private static final Logger log = LoggerFactory.getLogger(MainApp.class);
+	private AnnotationConfigApplicationContext APPLICATION_CONTEXT;
 
 	private Stage primaryStage;
 
@@ -36,18 +37,14 @@ public class MainApp extends Application {
 		log.info("Starting Hello JavaFX and Maven demonstration application");
 		Platform.setImplicitExit(true);
 
-		ApplicationContext context = new AnnotationConfigApplicationContext(HibernateConfig.class);
-		//context.getBean(HibernateConfig.class);
-
 		String fxmlFile = "/fxml/New.fxml";
 		log.debug("Loading FXML for main view from: {}", fxmlFile);
 		FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
-		//FXMLLoader loader = new FXMLLoader();
-		loader.setControllerFactory(context::getBean);
+		APPLICATION_CONTEXT = new AnnotationConfigApplicationContext(HibernateConfig.class);
+		loader.setControllerFactory(((ApplicationContext) APPLICATION_CONTEXT)::getBean);
 		Parent rootNode = loader.load();
 		log.debug("Showing JFX scene");
 		Scene scene = new Scene(rootNode);
-		// scene.getStylesheets().add("/styles/styles.css");
 
 		primaryStage.setTitle("Auto");
 		primaryStage.setScene(scene);
@@ -63,6 +60,7 @@ public class MainApp extends Application {
 		try {
 			String fxmlFile = "/fxml/GoodsEditDialog.fxml";
 			FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+			loader.setControllerFactory(((ApplicationContext) APPLICATION_CONTEXT)::getBean);
 			Parent rootNode = loader.load();
 			Stage dialogStage = new Stage();
 			dialogStage.setTitle("Edit Goods");
@@ -83,12 +81,13 @@ public class MainApp extends Application {
 		}
 	}
 
-	public boolean showCounterEditDialog(Counter counter) {
+	public boolean showCounterEditDialog() {
 		log.info("Showing counter dialog");
 
 		try {
 			String fxmlFile = "/fxml/CounterEditDialog.fxml";
 			FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+			loader.setControllerFactory(((ApplicationContext) APPLICATION_CONTEXT)::getBean);
 			Parent rootNode = loader.load();
 			Stage dialogStage = new Stage();
 			dialogStage.setTitle("Edit Goods");
@@ -98,7 +97,6 @@ public class MainApp extends Application {
 			dialogStage.setScene(scene);
 			CounterEditDialogController counterEditDialogController = loader.getController();
 			counterEditDialogController.setDialogStage(dialogStage);
-			counterEditDialogController.setCounter(counter);
 			dialogStage.showAndWait();
 			return counterEditDialogController.isOkClicked();
 		} catch(IOException e) {
@@ -107,11 +105,12 @@ public class MainApp extends Application {
 		}
 	}
 
-	public boolean showStoreAddDialog(Store store) {
+	public boolean showStoreAddDialog() {
 		log.info("Showing store dialog");
 		try {
 			String fxmlFile = "/fxml/StoreAddDialog.fxml";
 			FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+			loader.setControllerFactory(((ApplicationContext) APPLICATION_CONTEXT)::getBean);
 			Parent rootNode = loader.load();
 			Stage dialogStage = new Stage();
 			dialogStage.setTitle("Add store");
@@ -122,7 +121,6 @@ public class MainApp extends Application {
 
 			StoreAddDialogController storeAddDialogController = loader.getController();
 			storeAddDialogController.setDialogStage(dialogStage);
-			storeAddDialogController.setStore(store);
 
 			dialogStage.showAndWait();
 			return storeAddDialogController.isOkClicked();
@@ -137,6 +135,7 @@ public class MainApp extends Application {
 		try {
 			String fxmlFile = "/fxml/SetIdentityDialog.fxml";
 			FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
+			loader.setControllerFactory(((ApplicationContext) APPLICATION_CONTEXT)::getBean);
 			Parent rootNode = loader.load();
 			Stage dialogStage = new Stage();
 			dialogStage.setTitle("Add identity");

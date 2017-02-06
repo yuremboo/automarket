@@ -1,7 +1,9 @@
 package com.automarket.controller;
 
+import com.automarket.entity.CommodityCirculation;
 import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
+import com.automarket.entity.Store;
 import com.automarket.service.*;
 import com.automarket.utils.Validator;
 import javafx.beans.value.ChangeListener;
@@ -16,11 +18,16 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+@Controller
 public class CounterEditDialogController {
+
 	private static final Logger log = LoggerFactory.getLogger(CounterEditDialogController.class);
 	@FXML
 	private ComboBox<String> goodsBox;
@@ -29,30 +36,31 @@ public class CounterEditDialogController {
 	@FXML
 	private TextField countField;
 	private Stage dialogStage;
-	private Counter counter;
-	private Goods goods;
-	private GoodsService goodsService = new GoodsServiceImpl();
-	private CounterService counterService = new CounterServiceImpl();
-	private StoreService storeService = new StoreServiceImpl();
+	@Autowired
+	private GoodsService goodsService;
+	@Autowired
+	private CounterService counterService;
+	@Autowired
+	private StoreService storeService;
+	@Autowired
+	private CommodityCirculationsService circulationsService;
 	private boolean okClicked = false;
 	private ObservableList<String> goodNames = FXCollections.observableArrayList();
 	private ObservableList<String> storeNames = FXCollections.observableArrayList();
-	private boolean aBoolean = true;
 
 	@FXML
 	private void initialize() {
 		storeNames.addAll(storeService.getAllStoresNames());
 		goodNames.addAll(goodsService.getAllGoodsNames());
 		containerChoice.setItems(storeNames);
+		containerChoice.setValue(storeService.getDefault().getName());
 		goodsBox.setItems(goodNames);
 
-		goodsBox.getEditor().focusedProperty().addListener(new ChangeListener<Boolean>() {
-			@Override
-			public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean aBoolean2) {
-				if (aBoolean2) searchGoods(goodsBox.getValue());
+		goodsBox.getEditor().focusedProperty().addListener((observableValue, aBoolean1, aBoolean2) -> {
+			if(aBoolean2) {
+				searchGoods(goodsBox.getValue());
 			}
 		});
-
 
 	}
 
@@ -75,14 +83,9 @@ public class CounterEditDialogController {
 	 * @param counter
 	 */
 	public void setCounter(Counter counter) {
-		this.counter = counter;
 		goodsBox.setValue(counter.getGoodsName());
 		containerChoice.setValue(counter.getStoreName());
 		countField.setText(String.valueOf(counter.getCount()));
-	}
-
-	public Counter getCounter() {
-		return counter;
 	}
 
 	/**
@@ -99,16 +102,34 @@ public class CounterEditDialogController {
 	 */
 	@FXML
 	private void handleOk() {
-		if (Validator.textFieldNotEmpty(countField) && Integer.valueOf(countField.getText()) > 0) {
-			Goods goods1 = goodsService.getGoodsByName(goodsBox.getValue());
-			if (goods1.getId() == 0) {
-				goods1.setName(goodsBox.getValue());
-				goods1.setDescription("");
-				goodsService.addGoods(goods1);
+		if(Validator.textFieldNotEmpty(countField) && Integer.valueOf(countField.getText()) >= 0) {
+			Goods goods = goodsService.getGoodsByName(goodsBox.getValue());
+			Store store = storeService.getStoreByName(containerChoice.getValue());
+			if(goods == null) {
+				goods = new Goods();
+				goods.setName(goodsBox.getValue());
+				goods.setDescription(goodsBox.getValue());
+				goods = goodsService.addGoods(goods);
 			}
-			counter.setCount(Integer.parseInt(countField.getText()));
-			counter.setGoods(goodsService.getGoodsByName(goods1.getName()));
-			counter.setStore(storeService.getStoreByName(containerChoice.getValue()));
+			Counter counter = counterService.getCounterByGoodsStore(goods, store);
+			int count = Integer.parseInt(countField.getText());
+			if(counter == null) {
+				counter = new Counter();
+				counter.setGoods(goods);
+				counter.setStore(store);
+				counter.setCount(count);
+			} else {
+				counter.setCount(count + counter.getCount());
+			}
+			counter = counterService.addOrUpdateCounter(counter);
+
+			CommodityCirculation circulation = new CommodityCirculation();
+			circulation.setCount(count);
+			circulation.setDate(new Date());
+			circulation.setGoods(counter.getGoods());
+			circulation.setStore(counter.getStore());
+			circulation.setSale(false);
+			circulationsService.addCirculation(circulation);
 			okClicked = true;
 			dialogStage.close();
 		} else {
@@ -131,7 +152,7 @@ public class CounterEditDialogController {
 	protected void searchGoods(String s) {
 		List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(s));
 		goodNames.clear();
-		for (Goods goods1 : goodsList) {
+		for(Goods goods1 : goodsList) {
 			goodNames.add(goods1.getName());
 		}
 		goodsBox.setItems(goodNames);

@@ -7,12 +7,21 @@ import com.automarket.persistence.DAO.CounterDAOImpl;
 import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
+import com.automarket.persistence.repository.CounterJpaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CounterServiceImpl implements CounterService {
 	
-	CounterDAO counterDAO = new CounterDAOImpl();
+	private final CounterJpaRepository counterJpaRepository;
+
+	private CounterDAO counterDAO = new CounterDAOImpl();
+
+	@Autowired
+	public CounterServiceImpl(CounterJpaRepository counterJpaRepository) {
+		this.counterJpaRepository = counterJpaRepository;
+	}
 
 	@Override
 	public void addCounter(Counter counter) {
@@ -38,22 +47,22 @@ public class CounterServiceImpl implements CounterService {
 
     @Override
     public Counter getCounterByGoodsStore(Goods goods, Store store) {
-        return counterDAO.getCounterByGoodsStore(goods, store);
+        return counterJpaRepository.findOneByGoodsAndStore(goods, store);
     }
 
     @Override
 	public List<Counter> getCountersList() {
-		return counterDAO.getCountersList();
+		return counterJpaRepository.findAll();
 	}
 
     @Override
-    public List<Counter> searchCountersByGoods(String s) {
-        return counterDAO.searchCountersByGoods(s);
+    public List<Counter> searchCountersByGoods(List<Goods> goodsList) {
+        return counterJpaRepository.findAllByGoodsIn(goodsList);
     }
 
     @Override
     public List<Counter> getCountersListByStore(Store store) {
-        return counterDAO.getCountersListByStore(store);
+	    return counterJpaRepository.findAllByStore(store);
     }
 
     @Override
@@ -62,13 +71,18 @@ public class CounterServiceImpl implements CounterService {
 	}
 
     @Override
-    public void addOrUpdateCounter(Counter counter) {
-        counterDAO.addOrUpdateCounter(counter);
+    public Counter addOrUpdateCounter(Counter counter) {
+        return counterJpaRepository.saveAndFlush(counter);
     }
 
     @Override
     public void addOrUpdateCounterList(List<Counter> counterList) {
         counterDAO.addOrUpdateCounterList(counterList);
     }
+
+	@Override
+	public List<Counter> searchCountersByGoodsAndStore(List<Goods> goods, Store store) {
+		return counterJpaRepository.findAllByGoodsInAndStore(goods, store);
+	}
 
 }

@@ -6,11 +6,15 @@ import com.automarket.service.StoreServiceImpl;
 import com.automarket.utils.Validator;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 
+@Controller
 public class StoreAddDialogController {
 	private static final Logger log = LoggerFactory.getLogger(StoreAddDialogController.class);
 	
@@ -18,10 +22,13 @@ public class StoreAddDialogController {
 	private TextField storeNameField;
 	@FXML
 	private TextField storeDescField;
+	@FXML
+	private CheckBox storeIsDefaultField;
 	
 	private Stage dialogStage;
-	private Store store;
-	private StoreService storeService = new StoreServiceImpl();
+
+	@Autowired
+	private StoreService storeService;
 	private boolean okClicked = false;
 	
 	@FXML
@@ -39,20 +46,9 @@ public class StoreAddDialogController {
 	}
 
 	/**
-	 * Sets the store to be edited in the dialog.
-	 * 
-	 * @param store
-	 */
-	public void setStore(Store store) {
-		this.store = store;
-        storeNameField.setText(store.getName());
-		storeDescField.setText(store.getDescription());
-	}
-
-	/**
 	 * Returns true if the user clicked OK, false otherwise.
 	 * 
-	 * @return
+	 * @return true if the user clicked OK, false otherwise
 	 */
 	public boolean isOkClicked() {
 		return okClicked;
@@ -64,8 +60,11 @@ public class StoreAddDialogController {
 	@FXML
 	private void handleOk() {
 		if (Validator.textFieldNotEmpty(storeNameField)) {
+			Store store = new Store();
 			store.setName(storeNameField.getText());
 			store.setDescription(storeDescField.getText());
+			store.setDefaultStore(storeIsDefaultField.isSelected());
+			storeService.addStore(store);
 			okClicked = true;
 			dialogStage.close();
 		} else {
@@ -82,6 +81,7 @@ public class StoreAddDialogController {
 	 */
 	@FXML
 	private void handleCancel() {
+		okClicked = false;
 		dialogStage.close();
 	}
 }

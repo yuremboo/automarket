@@ -25,14 +25,14 @@ public class SetIdentityController {
     private Stage dialogStage;
     private boolean okClicked = false;
     private ObservableList<String> goodNames = FXCollections.observableArrayList();
-    private GoodsService goodsService = new GoodsServiceImpl();
+    //private GoodsService goodsService = new GoodsServiceImpl();
     private Goods ethalonGoods = new Goods();
     private Goods identityGoods = new Goods();
     private boolean isLaunched = true;
 
     @FXML
     private void initialize() {
-        goodNames.addAll(goodsService.getAllGoodsNames());
+       // goodNames.addAll(goodsService.getAllGoodsNames());
         goodsEthalon.setItems(goodNames);
         goodsIdentity.setItems(goodNames);
         goodsEthalon.setValue(ethalonGoods.getName());
@@ -74,15 +74,15 @@ public class SetIdentityController {
      */
     @FXML
     private void  handleOk() {
-        int identity = ethalonGoods.getAnalog();
-        if (identity <= 0) {
-            identity = goodsService.getMaxIdentity() + 1;
-            ethalonGoods.setAnalog(identity);
-        }
-        identityGoods = goodsService.getGoodsByName(goodsIdentity.getValue());
-        identityGoods.setAnalog(identity);
-        goodsService.addGoods(identityGoods);
-        goodsService.addGoods(ethalonGoods);
+//        int identity = ethalonGoods.getAnalog();
+//        if (identity <= 0) {
+//            identity = goodsService.getMaxIdentity() + 1;
+//            ethalonGoods.setAnalog(identity);
+//        }
+//        identityGoods = goodsService.getGoodsByName(goodsIdentity.getValue());
+//        identityGoods.setAnalog(identity);
+//        goodsService.addGoods(identityGoods);
+//        goodsService.addGoods(ethalonGoods);
         okClicked = true;
         dialogStage.close();
     }
@@ -101,7 +101,7 @@ public class SetIdentityController {
     }
 
     protected ObservableList<String> searchGoods(String s) {
-        List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(s));
+        List<Goods> goodsList = new ArrayList<>();
         ObservableList<String> goodNames = FXCollections.observableArrayList();
         goodNames.clear();
         for (Goods goods1:goodsList) {
