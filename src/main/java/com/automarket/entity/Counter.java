@@ -11,11 +11,12 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "COUNTER")
-public class Counter {
-	private int id;
+public class Counter implements Serializable {
+	private Integer id;
 	private Goods goods;
 	private Store store;
 	private String goodsName;
@@ -47,11 +48,11 @@ public class Counter {
 	@Id
 	@GeneratedValue
 	@Column(name = "id")
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

@@ -1,4 +1,4 @@
-package com.automarket.DAO;
+package com.automarket.persistence.DAO;
 
 import java.util.List;
 
@@ -6,6 +6,7 @@ import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
 
+@Deprecated
 public interface CounterDAO {
 	void addCounter(Counter counter);
 	void removeCounter(int id);

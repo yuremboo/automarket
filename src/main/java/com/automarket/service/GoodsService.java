@@ -1,16 +1,20 @@
 package com.automarket.service;
 
 import java.util.List;
+import java.util.Set;
 
 import com.automarket.entity.Goods;
 
 public interface GoodsService {
-	byte addGoods(Goods goods);
+	Goods addGoods(Goods goods);
 	void remove(Goods goods);
 	List<Goods> getAllGoods();
 	Goods getGoodsByName(String name);
-	byte addGoodsList(List<Goods> goods);
+	List<Goods> addGoodsList(List<Goods> goods);
     List<Goods> searchGoods(String text);
     List<String> getAllGoodsNames();
-    Integer getMaxIdentity();
+	Set<Goods> addAnalogs(Goods goods, Set<Goods> analogs);
+
+
+	Set<Goods> getGoodsAnalogs(Goods selectedGoods);
 }

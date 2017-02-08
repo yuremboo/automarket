@@ -1,14 +1,16 @@
 package com.automarket.entity;
 
+import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "STORE")
-public class Store {
-	private int id;
+public class Store implements Serializable {
+	private Integer id;
 	private String name;
 	private String description;
 	private Set<Counter> counters = new HashSet<>();
@@ -22,11 +24,11 @@ public class Store {
 	@Id
 	@GeneratedValue
 	@Column(name = "id")
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
@@ -107,7 +109,7 @@ public class Store {
 				return false;
 		} else if (!description.equals(other.description))
 			return false;
-		if (id != other.id)
+		if (!Objects.equals(id, other.id))
 			return false;
 		if (defaultStore != other.defaultStore)
 			return false;

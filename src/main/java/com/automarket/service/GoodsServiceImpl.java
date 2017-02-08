@@ -2,59 +2,90 @@ package com.automarket.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.automarket.DAO.GoodsDAO;
-import com.automarket.DAO.GoodsDAOImpl;
+import com.automarket.persistence.DAO.GoodsDAO;
+import com.automarket.persistence.DAO.GoodsDAOImpl;
 import com.automarket.entity.Goods;
+import com.automarket.persistence.repository.GoodsJpaRepository;
+import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Service
 public class GoodsServiceImpl implements GoodsService {
 	
 	private GoodsDAO goodsDAO = new GoodsDAOImpl();
+	private final GoodsJpaRepository goodsJpaRepository;
 
+	@Autowired
+	public GoodsServiceImpl(GoodsJpaRepository goodsJpaRepository) {
+		this.goodsJpaRepository = goodsJpaRepository;
+	}
+
+	@Transactional
 	@Override
-	public byte addGoods(Goods goods) {
-		return goodsDAO.addGoods(goods);
+	public Goods addGoods(Goods goods) {
+		return goodsJpaRepository.saveAndFlush(goods);
 	}
 	
 	@Override
-	public byte addGoodsList(List<Goods> goods) {
-		return goodsDAO.addGoodsList(goods);
+	public List<Goods> addGoodsList(List<Goods> goods) {
+		return goodsJpaRepository.save(goods);
 	}
 
 	@Override
 	public void remove(Goods goods) {
-		goodsDAO.remove(goods);
+		goodsJpaRepository.delete(goods);
 	}
 
 	@Override
 	public List<Goods> getAllGoods() {
-		return goodsDAO.getAllGoods();
+		List<Goods> goodsList = goodsJpaRepository.findAll();
+		for (Goods goods:goodsList) {
+			Hibernate.initialize(goods.getCounters());
+		}
+		return goodsList;
 	}
 
 	@Override
 	public Goods getGoodsByName(String name) {
-		return goodsDAO.getGoodsByName(name);
+		return goodsJpaRepository.findOneByName(name);
 	}
 
     @Override
     public List<Goods> searchGoods(String text) {
-        return goodsDAO.searchGoods(text);
+	    if(text == null) {
+		    text = "";
+	    }
+        return goodsJpaRepository.findByNameIgnoreCaseContaining(text);
     }
 
     @Override
     public List<String> getAllGoodsNames() {
         List<Goods> goodsList = new ArrayList<>();
-        goodsList.addAll(goodsDAO.getAllGoods());
-        List<String> goodsNames = new ArrayList<>();
-        for (Goods goods : goodsList) {
-            goodsNames.add(goods.getName());
-        }
-        return goodsNames;
+        goodsList.addAll(goodsJpaRepository.findAll());
+	    return goodsList.stream().map(Goods::getName).collect(Collectors.toList());
     }
 
-    @Override
-    public Integer getMaxIdentity() {
-        return goodsDAO.getMaxIdentity();
-    }
+    @Transactional
+	@Override
+	public Set<Goods> addAnalogs(Goods goods, Set<Goods> analogs) {
+		Goods goodsFromDb = goodsJpaRepository.findOne(goods.getId());
+		goodsFromDb.getMyAnalogs().addAll(analogs);
+		goodsJpaRepository.saveAndFlush(goodsFromDb);
+	    return goodsFromDb.getAllAnalogs();
+	}
+
+	@Transactional
+	@Override
+	public Set<Goods> getGoodsAnalogs(Goods selectedGoods) {
+		Goods goodsFromDb = goodsJpaRepository.findOne(selectedGoods.getId());
+		Hibernate.initialize(goodsFromDb.getAnalogsToMe());
+		Hibernate.initialize(goodsFromDb.getMyAnalogs());
+		return goodsFromDb.getAllAnalogs();
+	}
 
 }

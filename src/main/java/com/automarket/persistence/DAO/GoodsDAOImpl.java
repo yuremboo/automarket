@@ -1,4 +1,4 @@
-package com.automarket.DAO;
+package com.automarket.persistence.DAO;
 
 import static com.automarket.utils.HibernateUtil.getSessionFactory;
 
@@ -14,6 +14,7 @@ import org.hibernate.criterion.Restrictions;
 
 import com.automarket.entity.Goods;
 
+@Deprecated
 public class GoodsDAOImpl implements GoodsDAO {
 	
 	static Logger log = LogManager.getLogger(GoodsDAOImpl.class);
@@ -149,26 +150,5 @@ public class GoodsDAOImpl implements GoodsDAO {
             }
         }
         return goods;
-    }
-
-    @Override
-    public Integer getMaxIdentity() {
-        Session session = null;
-        Integer max = null;
-        try {
-            session = getSessionFactory().openSession();
-            session.beginTransaction();
-            Criteria criteria = session.createCriteria(Goods.class);
-            criteria.setProjection(Projections.max("analog"));
-            max = (Integer) criteria.list().get(0);
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        } finally {
-            if (session != null && session.isOpen()) {
-                session.close();
-            }
-        }
-        return max;
     }
 }

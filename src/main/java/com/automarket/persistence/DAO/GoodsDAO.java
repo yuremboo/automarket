@@ -1,4 +1,4 @@
-package com.automarket.DAO;
+package com.automarket.persistence.DAO;
 
 import java.util.List;
 
@@ -11,5 +11,4 @@ public interface GoodsDAO {
 	Goods getGoodsByName(String name);
 	byte addGoodsList(List<Goods> goods);
     List<Goods> searchGoods(String text);
-    Integer getMaxIdentity();
 }

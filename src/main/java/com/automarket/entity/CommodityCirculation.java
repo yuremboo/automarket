@@ -13,6 +13,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -37,15 +38,12 @@ public class CommodityCirculation {
     private String saleProp;
 	
 	public CommodityCirculation() {
-		super();
 	}
 	
-	public CommodityCirculation(long id, Date date, Goods goods, int count) {
-		super();
-		this.id = id;
-		this.date = date;
+	public CommodityCirculation(Goods goods, int count, Store store) {
 		this.goods = goods;
 		this.count = count;
+		this.store = store;
 	}
 
 	@Id
@@ -125,6 +123,11 @@ public class CommodityCirculation {
     }
     public void setSaleProp(String saleProp) {
         this.saleProp = saleProp;
+    }
+
+    @PrePersist
+    public void prePersist() {
+	    this.date = new Date();
     }
 	@Override
 	public String toString() {

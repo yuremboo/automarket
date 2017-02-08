@@ -1,38 +1,44 @@
 package com.automarket.service;
 
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import com.automarket.DAO.CommodityCirculationDAO;
-import com.automarket.DAO.CommodityCirculationDAOImpl;
+import com.automarket.persistence.DAO.CommodityCirculationDAO;
+import com.automarket.persistence.DAO.CommodityCirculationDAOImpl;
 import com.automarket.entity.CommodityCirculation;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
+import com.automarket.persistence.repository.CommodityCirculationJpaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-public class CommodityCirculationsServiceImpl implements
-		CommodityCirculationsService {
-	
+@Service
+public class CommodityCirculationsServiceImpl implements CommodityCirculationsService {
+
+	@Autowired
+	private CommodityCirculationJpaRepository commodityCirculationJpaRepository;
+
 	private CommodityCirculationDAO circulationDAO = new CommodityCirculationDAOImpl();
 
 	@Override
 	public void addCirculation(CommodityCirculation commodityCirculation) {
-		circulationDAO.addCirculation(commodityCirculation);
+		commodityCirculationJpaRepository.saveAndFlush(commodityCirculation);
 	}
 
 	@Override
 	public void addCirculations(List<CommodityCirculation> circulations) {
-		circulationDAO.addCirculations(circulations);
+		commodityCirculationJpaRepository.save(circulations);
 	}
 
-    @Override
-    public void removeZeroCirculations() {
-        circulationDAO.removeZeroCirculations();
-    }
+	@Override
+	public void removeZeroCirculations() {
+		circulationDAO.removeZeroCirculations();
+	}
 
-    @Override
+	@Override
 	public List<CommodityCirculation> commodityCirculations() {
-		return circulationDAO.commodityCirculations();
+		return commodityCirculationJpaRepository.findAll();
 	}
 
 	@Override
@@ -45,13 +51,24 @@ public class CommodityCirculationsServiceImpl implements
 		return circulationDAO.commodityCirculationsByMonth();
 	}
 
-    @Override
-    public List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store store, Goods goods, Boolean issale) {
-        return circulationDAO.commodityCirculationsByTerm(fromDate, toDate, store, goods, issale);
-    }
+	@Override
+	public List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store store, Goods goods, Boolean issale) {
+		return circulationDAO.commodityCirculationsByTerm(fromDate, toDate, store, goods, issale);
+	}
 
-    @Override
-    public List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store filterStore, Goods filterGoods) {
-        return circulationDAO.commodityCirculationsByTerm(fromDate, toDate, filterStore, filterGoods);
-    }
+	@Override
+	public List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store filterStore, Goods filterGoods) {
+		return circulationDAO.commodityCirculationsByTerm(fromDate, toDate, filterStore, filterGoods);
+	}
+
+	@Override
+	public List<CommodityCirculation> getTodaySales() {
+		//TODO: change to LocalDateTime java 8
+		Calendar startDate = Calendar.getInstance();
+		Calendar endDate = Calendar.getInstance();
+		startDate.set(Calendar.HOUR_OF_DAY, 0);
+		startDate.set(Calendar.MINUTE, 0);
+		startDate.set(Calendar.SECOND, 0);
+		return commodityCirculationJpaRepository.findAllByDateBetweenAndSale(startDate.getTime(), endDate.getTime(), true);
+	}
 }

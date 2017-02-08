@@ -1,4 +1,4 @@
-package com.automarket.DAO;
+package com.automarket.persistence.DAO;
 
 import static com.automarket.utils.HibernateUtil.getSessionFactory;
 
@@ -15,6 +15,7 @@ import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
 
+@Deprecated
 public class CounterDAOImpl implements CounterDAO {
 	
 	static Logger log = LogManager.getLogger(CounterDAOImpl.class);
