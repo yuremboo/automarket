@@ -1,6 +1,5 @@
 package com.automarket.service;
 
-import java.util.Date;
 import java.util.List;
 
 import com.automarket.entity.CommodityCirculation;
@@ -11,6 +10,8 @@ import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
 import com.automarket.persistence.repository.CounterJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -62,6 +63,11 @@ public class CounterServiceImpl implements CounterService {
     @Override
     public List<Counter> searchCountersByGoods(List<Goods> goodsList) {
         return counterJpaRepository.findAllByGoodsIn(goodsList);
+    }
+
+    @Override
+    public Page<Counter> getCountersListByStore(Store store, Pageable pageable) {
+	    return counterJpaRepository.findAllByStore(store, pageable);
     }
 
     @Override

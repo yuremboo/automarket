@@ -13,11 +13,14 @@ import com.automarket.utils.GoodsDTO;
 import com.automarket.utils.Validator;
 import com.automarket.utils.WorkWithExcel;
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -28,6 +31,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -43,6 +47,10 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 
 import java.io.File;
@@ -321,11 +329,46 @@ public class MainController {
 		if(mainTabPane.getSelectionModel().getSelectedItem().equals(goodsTab)) {
 			log.debug("Load GOODS...");
 			goodsList.clear();
-			List<Goods> goods = new ArrayList<>(goodsService.getAllGoods());
+			Pageable pageable = new PageRequest(0, 100, new Sort(Sort.Direction.ASC, "id"));
+			Page<Goods> goodsPage = goodsService.getGoodsPage(pageable);
+			List<Goods> goods = new ArrayList<>(goodsPage.getContent());
 			goodsList = FXCollections.observableList(goods);
 			goodsTable.setItems(goodsList);
 			goodsFilterChoice.setItems(FXCollections.observableArrayList(goods.stream().map(Goods::getName).collect(Collectors.toList())));
+			ScrollBar bar = getVerticalScrollbar(goodsTable);
+			bar.valueProperty().addListener(this::scrolledGoods);
+
 		}
+	}
+
+	private void scrolledGoods(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+		double value = newValue.doubleValue();
+		log.debug("Scrolled to ", value);
+		ScrollBar bar = getVerticalScrollbar(goodsTable);
+		if (value == bar.getMax()) {
+			System.out.println("Adding new persons.");
+			int page = goodsList.size() / 100;
+			double targetValue = value * goodsList.size();
+
+			Pageable pageable = new PageRequest(page, 100, new Sort(Sort.Direction.ASC, "id"));
+			Page<Goods> goodsPage = goodsService.getGoodsPage(pageable);
+			List<Goods> goods = new ArrayList<>(goodsPage.getContent());
+			goodsList.addAll(FXCollections.observableList(goods));
+			bar.setValue(targetValue / goodsList.size());
+		}
+	}
+
+	private ScrollBar getVerticalScrollbar(TableView<?> table) {
+		ScrollBar result = null;
+		for (Node n : table.lookupAll(".scroll-bar")) {
+			if (n instanceof ScrollBar) {
+				ScrollBar bar = (ScrollBar) n;
+				if (bar.getOrientation().equals(Orientation.VERTICAL)) {
+					result = bar;
+				}
+			}
+		}
+		return result;
 	}
 
 	private void initGoodsTableFields() {
@@ -363,6 +406,7 @@ public class MainController {
 				Goods selectedGoods = counterTableView.getSelectionModel().getSelectedItem().getGoods();
 				if(selectedGoods != null) {
 					goodsName.setValue(selectedGoods.getName());
+					storeChoise.setValue(counterTableView.getSelectionModel().getSelectedItem().getStoreName());
 					selectionModel.select(salesTab);
 				}
 			} else if(event.getCode() == KeyCode.A) {

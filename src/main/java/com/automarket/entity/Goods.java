@@ -3,6 +3,7 @@ package com.automarket.entity;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,7 +22,7 @@ import javax.persistence.Transient;
 
 @Entity
 @Table(name = "GOODS")
-public class Goods {
+public class Goods implements Serializable {
 
 	private Long id;
 	private String name;

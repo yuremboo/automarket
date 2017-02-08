@@ -11,6 +11,8 @@ import com.automarket.entity.Goods;
 import com.automarket.persistence.repository.GoodsJpaRepository;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,6 +88,16 @@ public class GoodsServiceImpl implements GoodsService {
 		Hibernate.initialize(goodsFromDb.getAnalogsToMe());
 		Hibernate.initialize(goodsFromDb.getMyAnalogs());
 		return goodsFromDb.getAllAnalogs();
+	}
+
+	@Transactional
+	@Override
+	public Page<Goods> getGoodsPage(Pageable pageable) {
+		Page<Goods> goodsList = goodsJpaRepository.findAll(pageable);
+		for (Goods goods:goodsList) {
+			Hibernate.initialize(goods.getCounters());
+		}
+		return goodsList;
 	}
 
 }

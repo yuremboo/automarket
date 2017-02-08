@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.automarket.entity.Goods;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface GoodsService {
 	Goods addGoods(Goods goods);
@@ -17,4 +19,6 @@ public interface GoodsService {
 
 
 	Set<Goods> getGoodsAnalogs(Goods selectedGoods);
+
+	Page<Goods> getGoodsPage(Pageable pageable);
 }
