@@ -79,4 +79,13 @@ public class GoodsServiceImpl implements GoodsService {
 	    return goodsFromDb.getAllAnalogs();
 	}
 
+	@Transactional
+	@Override
+	public Set<Goods> getGoodsAnalogs(Goods selectedGoods) {
+		Goods goodsFromDb = goodsJpaRepository.findOne(selectedGoods.getId());
+		Hibernate.initialize(goodsFromDb.getAnalogsToMe());
+		Hibernate.initialize(goodsFromDb.getMyAnalogs());
+		return goodsFromDb.getAllAnalogs();
+	}
+
 }

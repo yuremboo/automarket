@@ -4,10 +4,12 @@ import com.automarket.entity.CommodityCirculation;
 import com.automarket.entity.Counter;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
+import com.automarket.fxutils.AutoCompleteComboBoxListener;
 import com.automarket.service.CommodityCirculationsService;
 import com.automarket.service.CounterService;
 import com.automarket.service.GoodsService;
 import com.automarket.service.StoreService;
+import com.automarket.utils.GoodsDTO;
 import com.automarket.utils.Validator;
 import com.automarket.utils.WorkWithExcel;
 import javafx.application.Platform;
@@ -49,10 +51,11 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -187,6 +190,48 @@ public class MainController {
 	@FXML
 	private void initialize() {
 		selectionModel = mainTabPane.getSelectionModel();
+		initializeDatePickers();
+		initCounterTableFields();
+		initGoodsTableFields();
+		initCommodityTable();
+		initializeStores();
+		initializeGoods();
+		initReportTable();
+	}
+
+	private void initializeGoods() {
+		containerChoice.getSelectionModel().selectedItemProperty().addListener((observableValue, s, s2) -> fillContainerTable(s2));
+
+		searchTextField.textProperty().addListener((observableValue, s, s2) -> searchField(s2));
+
+		goodsName.getEditor().focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
+			if(aBoolean2) {
+				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(goodsName.getValue()));
+				ObservableList<String> goodNames = FXCollections.observableArrayList();
+				goodNames.addAll(goodsList1.stream().map(Goods::getName).collect(Collectors.toList()));
+				goodsName.setItems(goodNames);
+				new AutoCompleteComboBoxListener<>(goodsName);
+			}
+		});
+	}
+
+	private void initializeStores() {
+		defaultStore = storeService.getDefault();
+		ObservableList<String> storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
+		storesList.add(ALL_STORES);
+		storeChoise.setItems(storesList);
+		containerChoice.setItems(storesList);
+		if(defaultStore != null) {
+			storeChoise.setValue(defaultStore.getName());
+			containerChoice.setValue(defaultStore.getName());
+		} else {
+			storeChoise.setValue(ALL_STORES);
+			containerChoice.setValue(ALL_STORES);
+		}
+		storeFilterChoice.setItems(storesList);
+	}
+
+	private void initializeDatePickers() {
 		fromLabel.setText("З");
 		toLabel.setText("По");
 		fromDatePicker = new DatePicker(LocalDate.now());
@@ -199,38 +244,6 @@ public class MainController {
 		filterVBox.getChildren().add(fromDatePicker);
 		filterVBox.getChildren().add(toLabel);
 		filterVBox.getChildren().add(toDatePicker);
-
-		defaultStore = storeService.getDefault();
-		ObservableList<String> storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
-		storesList.add(ALL_STORES);
-		storeChoise.setItems(storesList);
-		if(defaultStore != null) {
-			storeChoise.setValue(defaultStore.getName());
-			containerChoice.setValue(defaultStore.getName());
-		} else {
-			storeChoise.setValue(ALL_STORES);
-			containerChoice.setValue(ALL_STORES);
-		}
-		containerChoice.setItems(storesList);
-
-		storeFilterChoice.setItems(storesList);
-		goodsFilterChoice.setItems(FXCollections.observableArrayList(goodsService.getAllGoodsNames()));
-
-		containerChoice.getSelectionModel().selectedItemProperty().addListener((observableValue, s, s2) -> fillContainerTable(s2));
-
-		searchTextField.textProperty().addListener((observableValue, s, s2) -> searchField(s2));
-
-		selectionModel.selectedItemProperty().addListener((observableValue, tab, tab2) -> {
-
-		});
-		goodsName.getEditor().focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
-			if(aBoolean2) {
-				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(goodsName.getValue()));
-				ObservableList<String> goodNames = FXCollections.observableArrayList();
-				goodNames.addAll(goodsList1.stream().map(Goods::getName).collect(Collectors.toList()));
-				goodsName.setItems(goodNames);
-			}
-		});
 	}
 
 	@FXML
@@ -245,9 +258,7 @@ public class MainController {
 
 	@FXML
 	protected void saleGoods() {
-
 		Store store = storeService.getStoreByName(storeChoise.getValue());
-
 		goodsValidLabel.setText("");
 		countValidLabel.setText("");
 		boolean name = Validator.textFieldNotEmpty(goodsName.getEditor(), goodsValidLabel, "Заповніть поле");
@@ -296,48 +307,47 @@ public class MainController {
 
 	@FXML
 	protected void loadStoresClick() {
-		System.out.println("Load...");
+		log.debug("Load stores...");
 	}
 
 	@FXML
 	protected void salesSelected() {
-		System.out.println("Sales...");
+		log.debug("Sales...");
 		commodityList();
 	}
 
 	@FXML
 	protected void goodsSelected(Event event) {
-		if(!mainTabPane.getSelectionModel().getSelectedItem().equals(goodsTab))
-			return;
-		log.debug("Load GOODS...");
-		if(!goodsList.isEmpty())
+		if(mainTabPane.getSelectionModel().getSelectedItem().equals(goodsTab)) {
+			log.debug("Load GOODS...");
 			goodsList.clear();
-		List<Goods> goods = new ArrayList<>();
-		goods.addAll(goodsService.getAllGoods());
-		goodsList = FXCollections.observableList(goods);
-		goodsTable.setItems(goodsList);
-		goodsColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
+			List<Goods> goods = new ArrayList<>(goodsService.getAllGoods());
+			goodsList = FXCollections.observableList(goods);
+			goodsTable.setItems(goodsList);
+			goodsFilterChoice.setItems(FXCollections.observableArrayList(goods.stream().map(Goods::getName).collect(Collectors.toList())));
+		}
+	}
+
+	private void initGoodsTableFields() {
 		goodsColumnName.setCellValueFactory(new PropertyValueFactory<>("name"));
 		goodsColumnDescription.setCellValueFactory(new PropertyValueFactory<>("description"));
 		goodsColumnTotalItems.setCellValueFactory(new PropertyValueFactory<>("totalItems"));
 		goodsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
 	}
 
 	@FXML
 	protected void containerSelected() {
-		if(!selectionModel.getSelectedItem().equals(containerTab))
-			return;
-		log.debug("Containers...");
-		fillContainerTable(containerChoice.getValue());
+		if(selectionModel.getSelectedItem().equals(containerTab)) {
+			log.debug("Containers...");
+			fillContainerTable(containerChoice.getValue());
+		}
 	}
 
 	private void fillContainerTable(String storeName) {
 		if(storeName == null) {
 			storeName = containerChoice.getValue();
 		}
-		if(!goodsFullList.isEmpty())
-			goodsFullList.clear();
+		goodsFullList.clear();
 		List<Counter> counters = new ArrayList<>();
 		if(!storeName.equals(ALL_STORES)) {
 			Store store = storeService.getStoreByName(storeName);
@@ -348,12 +358,6 @@ public class MainController {
 
 		goodsFullList = FXCollections.observableList(counters);
 		counterTableView.setItems(goodsFullList);
-		goodsCounterColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
-		goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
-		goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
-		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<>("count"));
-		counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
 		counterTableView.setOnKeyPressed(event -> {
 			if(event.getCode() == KeyCode.SPACE) {
 				Goods selectedGoods = counterTableView.getSelectionModel().getSelectedItem().getGoods();
@@ -362,14 +366,34 @@ public class MainController {
 					selectionModel.select(salesTab);
 				}
 			} else if(event.getCode() == KeyCode.A) {
+				Goods selectedGoods = counterTableView.getSelectionModel().getSelectedItem().getGoods();
 				analogsMode = !analogsMode;
 				if(analogsMode) {
 					log.info("Analogs called...");
+					Set<Goods> analogs = goodsService.getGoodsAnalogs(selectedGoods);
+					List<Counter> analogsCounters = new ArrayList<>();
+					if(ALL_STORES.equals(containerChoice.getValue())) {
+						analogsCounters.addAll(counterService.searchCountersByGoods(new ArrayList<>(analogs)));
+					} else {
+						Store store = storeService.getStoreByName(containerChoice.getValue());
+						analogsCounters.addAll(counterService.searchCountersByGoodsAndStore(new ArrayList<>(analogs), store));
+					}
+
+					goodsFullList = FXCollections.observableList(analogsCounters);
+					counterTableView.setItems(goodsFullList);
+					counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 				} else {
 					log.info("Base mode...");
 				}
 			}
 		});
+	}
+
+	private void initCounterTableFields() {
+		goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
+		goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
+		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<>("count"));
+		counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
 
 	@FXML
@@ -388,13 +412,13 @@ public class MainController {
 		circulations.addAll(circulationsService.getTodaySales());
 		ObservableList<CommodityCirculation> circulationsList = FXCollections.observableList(circulations);
 		commodityCirculationTable.setItems(circulationsList);
+	}
 
+	private void initCommodityTable() {
 		commodityCirculationColumnName.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
 		commodityCirculationColumnCount.setCellValueFactory(new PropertyValueFactory<>("count"));
 		commodityCirculationColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
-
 		commodityCirculationTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
 	}
 
 	@FXML
@@ -402,6 +426,7 @@ public class MainController {
 		commodityList();
 	}
 
+	@Deprecated
 	@FXML
 	protected void onLoad() {
 		FileChooser fileChooser = new FileChooser();
@@ -410,15 +435,6 @@ public class MainController {
 		File file = fileChooser.showOpenDialog(primaryStage);
 		List<Goods> goodsList = new ArrayList<>();
 		if(file != null) {
-			Map<Integer, List<Object>> data = new HashMap<>(WorkWithExcel.readFromExcell(file));
-			for(Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
-				Goods goods = new Goods();
-				goods.setName((String) entry.getValue().get(0));
-				if(entry.getValue().size() > 1) {
-					goods.setDescription((String) entry.getValue().get(1));
-				}
-				goodsList.add(goods);
-			}
 			goodsService.addGoodsList(goodsList);
 		}
 	}
@@ -457,9 +473,11 @@ public class MainController {
 	protected void addContainer() {
 		boolean okClicked = mainApp.showStoreAddDialog();
 		if(okClicked) {
+			containerChoice.getItems().clear();
 			storeChoise.getItems().clear();
 			List<Store> allStores = storeService.getAllStores();
 			storeChoise.getItems().addAll(allStores.stream().map(Store::getName).collect(Collectors.toList()));
+			containerChoice.getItems().addAll(allStores.stream().map(Store::getName).collect(Collectors.toList()));
 			defaultStore = null;
 			containerChoice.setValue(ALL_STORES);
 			allStores.stream().filter(Store::isDefaultStore).forEach(store -> {
@@ -520,7 +538,9 @@ public class MainController {
 	private void fillRepotrTable(List<CommodityCirculation> circulations) {
 		ObservableList<CommodityCirculation> circulationsReportList = FXCollections.observableArrayList(circulations);
 		reportTableView.setItems(circulationsReportList);
+	}
 
+	private void initReportTable() {
 		goodsReportColumn.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
 		countReportColumn.setCellValueFactory(new PropertyValueFactory<>("count"));
 		storeReportColumn.setCellValueFactory(new PropertyValueFactory<>("storeName"));
@@ -652,64 +672,51 @@ public class MainController {
 			@Override
 			protected Object call() throws Exception {
 				updateProgress(0, 1);
-				List<Counter> counterList = new ArrayList<>();
-				List<CommodityCirculation> circulationList = new ArrayList<>();
 				if(file != null) {
-					LinkedHashMap<Integer, List<Object>> data = WorkWithExcel.readFromExcell(file);
-					updateProgress(0.05, 1);
-					updateMessage("Перевірка і внесення товару...");
-					String s = "";
-					for(Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
-						if(s.equals(entry.getValue().get(0).toString()))
-							continue;
-						s = entry.getValue().get(0).toString();
-						Goods goods;
-						Counter counter = new Counter();
-						CommodityCirculation circulation = new CommodityCirculation();
-						Store store;
-						goods = goodsService.getGoodsByName(entry.getValue().get(0).toString().replaceAll("\\s+", ""));
-						if(goods.getId() == 0 || goods.getName() == null) {
-							goodsService.addGoods(new Goods(entry.getValue().get(0).toString().replaceAll("\\s+", ""), ""));
-							goods = goodsService.getGoodsByName(entry.getValue().get(0).toString().replaceAll("\\s+", ""));
-						}
-						store = storeService.getStoreByName(String.valueOf(((Double) entry.getValue().get(1)).intValue()));
-						if(store.getId() == 0 || store.getName() == null) {
-							updateMessage("Невірно вказаний контейнер!");
+					updateMessage("Зчитування файлу...");
+					List<GoodsDTO> data = WorkWithExcel.readFromExcell(file);
+					int size = data.size();
+					updateProgress(0, size);
+					updateMessage("Завантаження тоару...");
+					Map<String, Store> storeCache = new HashMap<>();
+					int i = 0;
+					for(GoodsDTO goodsDTO : data) {
+						log.debug("Saving {}", goodsDTO);
+						if(goodsDTO.getName() == null || goodsDTO.getName().trim().isEmpty()) {
 							continue;
 						}
-						if(entry.getKey() == 554) {
-							System.out.println(553);
+						Goods goods = goodsService.getGoodsByName(goodsDTO.getName());
+						if(goods == null) {
+							goods = new Goods();
+							goods.setName(goodsDTO.getName());
+							goods.setDescription(goodsDTO.getDescription());
+							goodsService.addGoods(goods);
 						}
-						int count = ((Double) entry.getValue().get(2)).intValue();
+
+						Store store = storeCache.get(goodsDTO.getStore());
+						if(store == null) {
+							store = storeService.getStoreByName(goodsDTO.getStore());
+							storeCache.put(goodsDTO.getStore(), store);
+						}
+
+						Counter counter = counterService.getCounterByGoodsStore(goods, store);
+						if(counter == null) {
+							counter = new Counter();
+						}
+						counter.setCount(counter.getCount() + goodsDTO.getCount());
 						counter.setGoods(goods);
 						counter.setStore(store);
-						counter.setCount(count);
-						circulation.setCount(count);
+						counterService.addOrUpdateCounter(counter);
+
+						CommodityCirculation circulation = new CommodityCirculation();
+
+						circulation.setCount(goodsDTO.getCount());
 						circulation.setDate(new Date());
 						circulation.setGoods(goods);
 						circulation.setStore(store);
 						circulation.setSale(false);
-						System.out.println(entry.getKey() + " - " + entry.getValue());
-						Counter counterByGoodsStore = counterService.getCounterByGoodsStore(goods, store);
-						counter.setId(counterByGoodsStore.getId());
-						if(counter.getId() > 0) {
-							counter.setCount(counter.getCount() + counterByGoodsStore.getCount());
-						}
-						System.out.println("A");
-						if(circulation.getCount() > 0) {
-							circulationList.add(circulation);
-						}
-						counterList.add(counter);
-						System.out.println("B");
+						updateProgress(++i, data.size());
 					}
-					System.out.println("C");
-					updateProgress(0.3, 1);
-					updateMessage("Завантаження тоару...");
-					counterService.addOrUpdateCounterList(counterList);
-					updateProgress(0.7, 1);
-					updateMessage("Завантаження обороту...");
-					circulationsService.addCirculations(circulationList);
-					updateProgress(0.95, 1);
 					updateMessage("Виведення таблиці...");
 				}
 				fillContainerTable(storeChoise.getValue());
@@ -724,9 +731,7 @@ public class MainController {
 	}
 
 	private void searchField(String text) {
-		if(!goodsFullList.isEmpty()) {
-			goodsFullList.clear();
-		}
+		goodsFullList.clear();
 		List<Goods> goods = goodsService.searchGoods(text);
 		if(goods.isEmpty()) {
 			return;

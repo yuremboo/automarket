@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface CommodityCirculationJpaRepository extends JpaRepository<CommodityCirculation, Long> {
 	List<CommodityCirculation> findAllByDateBetween(Date startDate, Date endDateTime);
+
+	List<CommodityCirculation> findAllByDateBetweenAndSale(Date time, Date time1, boolean isSale);
 }

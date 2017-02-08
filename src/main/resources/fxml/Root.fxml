@@ -141,7 +141,6 @@
                                                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                             </columnResizePolicy>
                                             <columns>
-                                                <TableColumn fx:id="goodsCounterColumnId" prefWidth="75.0" text="ID" />
                                                 <TableColumn fx:id="goodsCounterColumnName" prefWidth="75.0" text="Назва" />
                                                 <TableColumn fx:id="goodsCounterColumnContainer" prefWidth="75.0" text="Контейнер" />
                                                 <TableColumn fx:id="goodsCounterColumnC" prefWidth="75.0" text="Кількість" />
@@ -170,7 +169,7 @@
                                                 <Button mnemonicParsing="false" onAction="#addContainer" text="Додати контейнер" />
                                                 <Button mnemonicParsing="false" onAction="#setAsDefault" text="За замовчуванням" />
                                     <Label text="Пошук" />
-                                                <TextField fx:id="searchTextField" alignment="BASELINE_RIGHT" nodeOrientation="LEFT_TO_RIGHT" prefHeight="39.0" prefWidth="177.0">
+                                                <TextField fx:id="searchTextField" alignment="BASELINE_RIGHT" nodeOrientation="LEFT_TO_RIGHT" prefHeight="18.0" prefWidth="177.0">
                                        <HBox.margin>
                                           <Insets />
                                        </HBox.margin></TextField>
@@ -200,7 +199,6 @@
                                     <center>
                                         <TableView fx:id="goodsTable" prefHeight="351.0" prefWidth="592.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
                                             <columns>
-                                                <TableColumn fx:id="goodsColumnId" prefWidth="84.0" text="ID" />
                                                 <TableColumn fx:id="goodsColumnName" prefWidth="246.0" text="Назва" />
                                                 <TableColumn fx:id="goodsColumnDescription" prefWidth="75.0" text="Опис" />
                                                 <TableColumn fx:id="goodsColumnTotalItems" prefWidth="75.0" text="Кількість" />
@@ -214,7 +212,7 @@
                                         </TableView>
                                     </center>
                                     <bottom>
-                                        <HBox alignment="BASELINE_CENTER" prefHeight="50.0" prefWidth="662.0" spacing="10.0" styleClass="tabRootPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" BorderPane.alignment="CENTER">
+                                        <HBox alignment="BASELINE_CENTER" prefHeight="50.0" prefWidth="662.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" BorderPane.alignment="CENTER">
                                             <children>
                                                 <Button layoutY="363.0" mnemonicParsing="false" onAction="#handleEditGoods" text="Редагувати" AnchorPane.bottomAnchor="14.0">
                                                     <HBox.margin>
