@@ -37,7 +37,7 @@ public class MainApp extends Application {
 		log.info("Starting Hello JavaFX and Maven demonstration application");
 		Platform.setImplicitExit(true);
 
-		String fxmlFile = "/fxml/New.fxml";
+		String fxmlFile = "/fxml/Root.fxml";
 		log.debug("Loading FXML for main view from: {}", fxmlFile);
 		FXMLLoader loader = new FXMLLoader(MainApp.class.getResource(fxmlFile));
 		APPLICATION_CONTEXT = new AnnotationConfigApplicationContext(HibernateConfig.class);

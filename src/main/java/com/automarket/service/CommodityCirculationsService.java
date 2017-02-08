@@ -18,4 +18,6 @@ public interface CommodityCirculationsService {
 	List<CommodityCirculation> commodityCirculationsByMonth();
     List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store store, Goods goods, Boolean issale);
     List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store filterStore, Goods filterGoods);
+
+	List<CommodityCirculation> getTodaySales();
 }

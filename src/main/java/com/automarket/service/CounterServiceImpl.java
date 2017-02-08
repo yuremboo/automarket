@@ -1,7 +1,9 @@
 package com.automarket.service;
 
+import java.util.Date;
 import java.util.List;
 
+import com.automarket.entity.CommodityCirculation;
 import com.automarket.persistence.DAO.CounterDAO;
 import com.automarket.persistence.DAO.CounterDAOImpl;
 import com.automarket.entity.Counter;
@@ -13,14 +15,16 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CounterServiceImpl implements CounterService {
-	
-	private final CounterJpaRepository counterJpaRepository;
 
+	private final CommodityCirculationsService circulationsService;
+
+	private final CounterJpaRepository counterJpaRepository;
 	private CounterDAO counterDAO = new CounterDAOImpl();
 
 	@Autowired
-	public CounterServiceImpl(CounterJpaRepository counterJpaRepository) {
+	public CounterServiceImpl(CounterJpaRepository counterJpaRepository, CommodityCirculationsService circulationsService) {
 		this.counterJpaRepository = counterJpaRepository;
+		this.circulationsService = circulationsService;
 	}
 
 	@Override
@@ -67,7 +71,18 @@ public class CounterServiceImpl implements CounterService {
 
     @Override
 	public int sale(Goods goods, Store store, int count) {
-		return counterDAO.sale(goods, store, count);
+	    Counter goodsCount = counterJpaRepository.findOneByGoodsAndStore(goods, store);
+	    if(goodsCount.getCount() < count) {
+		    throw new RuntimeException("Not enough goods"); //TODO: change
+	    }
+	    goodsCount.setCount(goodsCount.getCount() - count);
+	    counterJpaRepository.saveAndFlush(goodsCount);
+
+	    CommodityCirculation commodityCirculation = new CommodityCirculation(goods, count, store);
+	    commodityCirculation.setSale(true);
+	    circulationsService.addCirculation(commodityCirculation);
+
+	    return goodsCount.getCount();
 	}
 
     @Override

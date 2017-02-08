@@ -6,7 +6,6 @@ import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
 import com.automarket.service.CommodityCirculationsService;
 import com.automarket.service.CounterService;
-import com.automarket.service.CounterServiceImpl;
 import com.automarket.service.GoodsService;
 import com.automarket.service.StoreService;
 import com.automarket.utils.Validator;
@@ -34,6 +33,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -49,23 +49,22 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
 public class MainController {
 
 	private static final Logger log = LoggerFactory.getLogger(MainController.class);
-	public static final String ALL_STORES = "Всі";
+	private static final String ALL_STORES = "Всі";
 
 	private MainApp mainApp;
 	private Stage primaryStage;
 	private Store defaultStore = new Store();
+	private boolean analogsMode;
 
 	@FXML
 	private TabPane mainTabPane;
@@ -154,34 +153,34 @@ public class MainController {
 	@FXML
 	private Label statusLabel;
 
-	@Autowired
-	private GoodsService goodsService;
-	@Autowired
-	private CounterService counterService;
-	@Autowired
-	private StoreService storeService;
-	@Autowired
-	private CommodityCirculationsService circulationsService;
+	private final GoodsService goodsService;
+	private final CounterService counterService;
+	private final StoreService storeService;
+	private final CommodityCirculationsService circulationsService;
 	private ObservableList<Goods> goodsList = FXCollections.observableArrayList();
 	private ObservableList<Counter> goodsFullList = FXCollections.observableArrayList();
-	private ObservableList<CommodityCirculation> circulationsList = FXCollections.observableArrayList();
-	private ObservableList<String> storesList = FXCollections.observableArrayList();
 	@FXML
 	private VBox filterVBox;
 	private Label fromLabel = new Label();
 	private Label toLabel = new Label();
 	private DatePicker fromDatePicker;
 	private DatePicker toDatePicker;
-	private Task importTask;
-	private Task formatDb;
-	private Task formatReports;
 	private SingleSelectionModel<Tab> selectionModel;
 
-	public void setMainApp(MainApp mainApp) {
+	@Autowired
+	public MainController(CounterService counterService, GoodsService goodsService, StoreService storeService,
+			CommodityCirculationsService circulationsService) {
+		this.counterService = counterService;
+		this.goodsService = goodsService;
+		this.storeService = storeService;
+		this.circulationsService = circulationsService;
+	}
+
+	void setMainApp(MainApp mainApp) {
 		this.mainApp = mainApp;
 	}
 
-	public void setDialogStage(Stage primaryStage) {
+	void setDialogStage(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 	}
 
@@ -202,7 +201,7 @@ public class MainController {
 		filterVBox.getChildren().add(toDatePicker);
 
 		defaultStore = storeService.getDefault();
-		storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
+		ObservableList<String> storesList = FXCollections.observableArrayList(storeService.getAllStoresNames());
 		storesList.add(ALL_STORES);
 		storeChoise.setItems(storesList);
 		if(defaultStore != null) {
@@ -256,9 +255,8 @@ public class MainController {
 		if(!name || !cnt) {
 			return;
 		}
-		int c = 0;
 		String goodsNameStr = goodsName.getValue();
-		int count = 0;
+		int count;
 		try {
 			count = Integer.parseInt(goodsCount.getText());
 		} catch(Exception e) {
@@ -267,26 +265,26 @@ public class MainController {
 			return;
 		}
 		Goods goods = goodsService.getGoodsByName(goodsNameStr);
-		CommodityCirculation commodityCirculation = new CommodityCirculation(0, new Date(), goods, count);
-		commodityCirculation.setSale(true);
-		commodityCirculation.setStore(store);
-		log.debug("Sale " + goods + " " + store);
-		if(goods != null && goods.getId() != 0) {
-			infoLabel.setText(goods.toString());
-			c = counterService.sale(goods, store, count);
-		} else {
+		if(goods == null) {
 			infoLabel.setText("Товар не знайдено!");
+			return;
 		}
-		if(c > 0) {
-			circulationsService.addCirculation(commodityCirculation);
-			goodsName.setValue("");
-			goodsCount.setText("");
-			infoLabel.setText("Продано: " + goodsNameStr + " Кількість: " + count);
-		} else if(c == -1) {
-			infoLabel.setText("Не вистачає кількості одиниць товару для продажу!");
-		} else {
-			infoLabel.setText("Виникла помилка при продажі! Перевірте введені дані!");
+
+		log.debug("Sale " + goods + " " + store);
+
+		infoLabel.setText(goods.toString());
+		int countLeft;
+		try {
+			countLeft = counterService.sale(goods, store, count);
+		} catch(RuntimeException e) {
+			infoLabel.setText("Не вистачає кількості одиниць товару для продажу! Або виникла непередбачувана помилка.");
+			return;
 		}
+
+		goodsName.setValue("");
+		goodsCount.setText("");
+		infoLabel.setText("Продано: " + goodsNameStr + " Кількість: " + count + " Залишилось: " + countLeft);
+
 		commodityList();
 	}
 
@@ -303,8 +301,8 @@ public class MainController {
 
 	@FXML
 	protected void salesSelected() {
-		// if (selectionModel.getSelectedIndex() != 0) return;
 		System.out.println("Sales...");
+		commodityList();
 	}
 
 	@FXML
@@ -356,6 +354,22 @@ public class MainController {
 		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<>("count"));
 		counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+		counterTableView.setOnKeyPressed(event -> {
+			if(event.getCode() == KeyCode.SPACE) {
+				Goods selectedGoods = counterTableView.getSelectionModel().getSelectedItem().getGoods();
+				if(selectedGoods != null) {
+					goodsName.setValue(selectedGoods.getName());
+					selectionModel.select(salesTab);
+				}
+			} else if(event.getCode() == KeyCode.A) {
+				analogsMode = !analogsMode;
+				if(analogsMode) {
+					log.info("Analogs called...");
+				} else {
+					log.info("Base mode...");
+				}
+			}
+		});
 	}
 
 	@FXML
@@ -369,9 +383,10 @@ public class MainController {
 		}
 	}
 
-	public void commodityList() {
+	private void commodityList() {
 		List<CommodityCirculation> circulations = new ArrayList<>();
-		circulations.addAll(circulationsService.commodityCirculationsByDay(true));
+		circulations.addAll(circulationsService.getTodaySales());
+		ObservableList<CommodityCirculation> circulationsList = FXCollections.observableList(circulations);
 		commodityCirculationTable.setItems(circulationsList);
 
 		commodityCirculationColumnName.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
@@ -379,7 +394,6 @@ public class MainController {
 		commodityCirculationColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
 
 		commodityCirculationTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-		circulationsList = FXCollections.observableList(circulations);
 
 	}
 
@@ -427,7 +441,7 @@ public class MainController {
 		addCount.setDisable(true);
 		importCount.setDisable(true);
 		exportCount.setDisable(true);
-		importTask = importCounters(file);
+		Task importTask = importCounters(file);
 		progressBar.progressProperty().unbind();
 		progressIndicator.progressProperty().unbind();
 		statusLabel.textProperty().unbind();
@@ -503,19 +517,15 @@ public class MainController {
 		}
 	}
 
-	/**
-	 *
-	 * @param circulations
-	 */
 	private void fillRepotrTable(List<CommodityCirculation> circulations) {
 		ObservableList<CommodityCirculation> circulationsReportList = FXCollections.observableArrayList(circulations);
 		reportTableView.setItems(circulationsReportList);
 
-		goodsReportColumn.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("goodsName"));
-		countReportColumn.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, Integer>("count"));
-		storeReportColumn.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("storeName"));
-		dateReportColumn.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, Date>("date"));
-		saleReportColumn.setCellValueFactory(new PropertyValueFactory<CommodityCirculation, String>("saleProp"));
+		goodsReportColumn.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
+		countReportColumn.setCellValueFactory(new PropertyValueFactory<>("count"));
+		storeReportColumn.setCellValueFactory(new PropertyValueFactory<>("storeName"));
+		dateReportColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+		saleReportColumn.setCellValueFactory(new PropertyValueFactory<>("saleProp"));
 
 		reportTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
@@ -525,7 +535,6 @@ public class MainController {
 		goodsReportColumn.setSortType(TableColumn.SortType.ASCENDING);
 		ArrayList<CommodityCirculation> report = new ArrayList<>(reportTableView.getItems());
 		Map<Integer, ArrayList<Object>> listMap = new HashMap<>();
-		// listMap.put(-1, new ArrayList<Object>(Arrays.asList("Товар" , "Кількість", "Контейнер", "Дата", "Продаж")));
 		for(CommodityCirculation circulation : report) {
 			ArrayList<Object> objects = new ArrayList<>();
 			objects.add(circulation.getGoodsName());
@@ -558,7 +567,7 @@ public class MainController {
 		if(selectedIndex >= 0) {
 			Optional<ButtonType> response = showConfirmDialog(primaryStage, "Ви дійсно бажаєте видалити товар? Дію не можливо буде повернути!"
 					+ goodsTable.getSelectionModel().selectedItemProperty().get().getName(), "Видалити товар", "Видалення");
-			if(ButtonType.OK == response.get()) {
+			if(response.isPresent() && ButtonType.OK == response.get()) {
 				goodsService.remove(goodsTable.getSelectionModel().getSelectedItem());
 				goodsTable.getItems().remove(selectedIndex);
 			}
@@ -649,19 +658,11 @@ public class MainController {
 					LinkedHashMap<Integer, List<Object>> data = WorkWithExcel.readFromExcell(file);
 					updateProgress(0.05, 1);
 					updateMessage("Перевірка і внесення товару...");
-					byte b = 1;
-					String s = new String("");
-					Set entrySet = data.entrySet();
-					Iterator iterator = entrySet.iterator();
-					while(iterator.hasNext()) {
-						System.out.println("sdssdsdsd" + iterator.next());
-					}
-
+					String s = "";
 					for(Map.Entry<Integer, List<Object>> entry : data.entrySet()) {
 						if(s.equals(entry.getValue().get(0).toString()))
 							continue;
 						s = entry.getValue().get(0).toString();
-						String goodsName;
 						Goods goods;
 						Counter counter = new Counter();
 						CommodityCirculation circulation = new CommodityCirculation();
@@ -722,7 +723,7 @@ public class MainController {
 		};
 	}
 
-	protected void searchField(String text) {
+	private void searchField(String text) {
 		if(!goodsFullList.isEmpty()) {
 			goodsFullList.clear();
 		}
@@ -754,7 +755,7 @@ public class MainController {
 	@FXML
 	protected void formatGoods() {
 		mainTabPane.setDisable(true);
-		formatDb = formatDb();
+		Task formatDb = formatDb();
 		progressBar.progressProperty().unbind();
 		progressIndicator.progressProperty().unbind();
 		statusLabel.textProperty().unbind();
@@ -769,7 +770,7 @@ public class MainController {
 	@FXML
 	protected void formatReports() {
 		mainTabPane.setDisable(true);
-		formatReports = formatDbReports();
+		Task formatReports = formatDbReports();
 		progressBar.progressProperty().unbind();
 		progressIndicator.progressProperty().unbind();
 		statusLabel.textProperty().unbind();

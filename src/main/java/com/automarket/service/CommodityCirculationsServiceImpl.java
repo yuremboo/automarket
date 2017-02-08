@@ -1,5 +1,6 @@
 package com.automarket.service;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -58,5 +59,16 @@ public class CommodityCirculationsServiceImpl implements CommodityCirculationsSe
 	@Override
 	public List<CommodityCirculation> commodityCirculationsByTerm(Date fromDate, Date toDate, Store filterStore, Goods filterGoods) {
 		return circulationDAO.commodityCirculationsByTerm(fromDate, toDate, filterStore, filterGoods);
+	}
+
+	@Override
+	public List<CommodityCirculation> getTodaySales() {
+		//TODO: change to LocalDateTime java 8
+		Calendar startDate = Calendar.getInstance();
+		Calendar endDate = Calendar.getInstance();
+		startDate.set(Calendar.HOUR_OF_DAY, 0);
+		startDate.set(Calendar.MINUTE, 0);
+		startDate.set(Calendar.SECOND, 0);
+		return commodityCirculationJpaRepository.findAllByDateBetween(startDate.getTime(), endDate.getTime());
 	}
 }
