@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.automarket.entity.Store;
 
+@Deprecated
 public interface StoreDAO {
 	void addStore(Store store);
 	void remove(int id);

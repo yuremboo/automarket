@@ -19,6 +19,7 @@ import org.hibernate.criterion.Restrictions;
 
 import com.automarket.entity.CommodityCirculation;
 
+@Deprecated
 public class CommodityCirculationDAOImpl implements CommodityCirculationDAO {
 	
 	static Logger log = LogManager.getLogger(CommodityCirculationDAOImpl.class);

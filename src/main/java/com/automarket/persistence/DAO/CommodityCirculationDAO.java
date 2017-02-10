@@ -7,6 +7,7 @@ import com.automarket.entity.CommodityCirculation;
 import com.automarket.entity.Goods;
 import com.automarket.entity.Store;
 
+@Deprecated
 public interface CommodityCirculationDAO {
 	void addCirculation(CommodityCirculation commodityCirculation);
 	void addCirculations(List<CommodityCirculation> circulations);
