@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.automarket.entity.Goods;
 
+@Deprecated
 public interface GoodsDAO {
 	byte addGoods(Goods goods);
 	void remove(Goods goods);

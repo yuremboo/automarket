@@ -13,6 +13,7 @@ import org.hibernate.criterion.Restrictions;
 
 import com.automarket.entity.Store;
 
+@Deprecated
 public class StoreDAOImpl implements StoreDAO {
 	
 	static Logger log = LogManager.getLogger(StoreDAOImpl.class);

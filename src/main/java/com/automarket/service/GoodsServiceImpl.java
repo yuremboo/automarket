@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GoodsServiceImpl implements GoodsService {
-	
+
 	private GoodsDAO goodsDAO = new GoodsDAOImpl();
 	private final GoodsJpaRepository goodsJpaRepository;
 
@@ -34,7 +34,7 @@ public class GoodsServiceImpl implements GoodsService {
 	public Goods addGoods(Goods goods) {
 		return goodsJpaRepository.saveAndFlush(goods);
 	}
-	
+
 	@Override
 	public List<Goods> addGoodsList(List<Goods> goods) {
 		return goodsJpaRepository.save(goods);
@@ -48,7 +48,7 @@ public class GoodsServiceImpl implements GoodsService {
 	@Override
 	public List<Goods> getAllGoods() {
 		List<Goods> goodsList = goodsJpaRepository.findAll();
-		for (Goods goods:goodsList) {
+		for(Goods goods : goodsList) {
 			Hibernate.initialize(goods.getCounters());
 		}
 		return goodsList;
@@ -59,32 +59,35 @@ public class GoodsServiceImpl implements GoodsService {
 		return goodsJpaRepository.findOneByName(name);
 	}
 
-    @Override
-    public List<Goods> searchGoods(String text) {
-	    if(text == null) {
-		    text = "";
-	    }
-        return goodsJpaRepository.findByNameIgnoreCaseContaining(text);
-    }
+	@Override
+	public List<Goods> searchGoods(String text) {
+		if(text == null) {
+			text = "";
+		}
+		return goodsJpaRepository.findByNameIgnoreCaseContaining(text);
+	}
 
-    @Override
-    public List<String> getAllGoodsNames() {
-        List<Goods> goodsList = new ArrayList<>();
-        goodsList.addAll(goodsJpaRepository.findAll());
-	    return goodsList.stream().map(Goods::getName).collect(Collectors.toList());
-    }
+	@Override
+	public List<String> getAllGoodsNames() {
+		List<Goods> goodsList = new ArrayList<>();
+		goodsList.addAll(goodsJpaRepository.findAll());
+		return goodsList.stream().map(Goods::getName).collect(Collectors.toList());
+	}
 
-    @Transactional
+	@Transactional
 	@Override
 	public Set<Goods> addAnalogs(Goods goods, Set<Goods> analogs) {
-	    Integer analogousType = goods.getAnalogousType();
-	    if(analogousType == null) {
-		    analogousType = goodsJpaRepository.findMaxAnalogousType();
-		    analogousType = analogousType == null ? 1 : analogousType + 1;
-		    goods.setAnalogousType(analogousType);
-		    analogs.add(goods);
-	    }
-	    return new HashSet<>(goodsJpaRepository.save(analogs));
+		Integer analogousType = goods.getAnalogousType();
+		if(analogousType == null) {
+			analogousType = goodsJpaRepository.findMaxAnalogousType();
+			analogousType = analogousType == null ? 1 : analogousType + 1;
+			goods.setAnalogousType(analogousType);
+			analogs.add(goods);
+		}
+		for(Goods analog : analogs) {
+			analog.setAnalogousType(analogousType);
+		}
+		return new HashSet<>(goodsJpaRepository.save(analogs));
 	}
 
 	@Transactional
@@ -100,7 +103,7 @@ public class GoodsServiceImpl implements GoodsService {
 	@Override
 	public Page<Goods> getGoodsPage(Pageable pageable) {
 		Page<Goods> goodsList = goodsJpaRepository.findAll(pageable);
-		for (Goods goods:goodsList) {
+		for(Goods goods : goodsList) {
 			Hibernate.initialize(goods.getCounters());
 		}
 		return goodsList;

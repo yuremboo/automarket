@@ -81,7 +81,7 @@ public class MainApp extends Application {
 		}
 	}
 
-	public boolean showCounterEditDialog() {
+	public boolean showCounterEditDialog(boolean analogsMode, Counter selected) {
 		log.info("Showing counter dialog");
 
 		try {
@@ -97,6 +97,8 @@ public class MainApp extends Application {
 			dialogStage.setScene(scene);
 			CounterEditDialogController counterEditDialogController = loader.getController();
 			counterEditDialogController.setDialogStage(dialogStage);
+			counterEditDialogController.setCounter(selected);
+			counterEditDialogController.setAnalogMode(analogsMode);
 			dialogStage.showAndWait();
 			return counterEditDialogController.isOkClicked();
 		} catch(IOException e) {

@@ -44,6 +44,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,11 +60,9 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -179,6 +178,7 @@ public class MainController {
 	private DatePicker fromDatePicker;
 	private DatePicker toDatePicker;
 	private SingleSelectionModel<Tab> selectionModel;
+	private Counter selectedCounter;
 
 	@Autowired
 	public MainController(CounterService counterService, GoodsService goodsService, StoreService storeService,
@@ -207,13 +207,29 @@ public class MainController {
 		initializeStores();
 		initializeGoods();
 		initReportTable();
+		initCounterTable();
+	}
+
+	private void initCounterTable() {
+		counterTableView.setOnKeyPressed(event -> {
+			selectedCounter = counterTableView.getSelectionModel().getSelectedItem();
+			Goods selectedGoods = selectedCounter.getGoods();
+			if(event.getCode() == KeyCode.SPACE) {
+				if(selectedGoods != null) {
+					goodsName.setValue(selectedGoods.getName());
+					storeChoise.setValue(counterTableView.getSelectionModel().getSelectedItem().getStoreName());
+					selectionModel.select(salesTab);
+				}
+			} else if(event.getCode() == KeyCode.A) {
+				analogsMode = !analogsMode;
+				fillContainerTable(0);
+			}
+		});
+		searchTextField.textProperty().addListener((observableValue, s, s2) -> fillContainerTable(0));
+		counterTableView.setOnMouseClicked(event -> selectedCounter = counterTableView.getSelectionModel().getSelectedItem());
 	}
 
 	private void initializeGoods() {
-		containerChoice.getSelectionModel().selectedItemProperty().addListener((observableValue, s, s2) -> fillContainerTable(s2));
-
-		searchTextField.textProperty().addListener((observableValue, s, s2) -> searchField(s2));
-
 		goodsName.getEditor().focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
 			if(aBoolean2) {
 				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(goodsName.getValue()));
@@ -239,6 +255,7 @@ public class MainController {
 			containerChoice.setValue(ALL_STORES);
 		}
 		storeFilterChoice.setItems(storesList);
+		containerChoice.getSelectionModel().selectedItemProperty().addListener((observableValue, s, s2) -> fillContainerTable(0));
 	}
 
 	private void initializeDatePickers() {
@@ -386,58 +403,56 @@ public class MainController {
 			log.debug("Containers...");
 			analogsMode = false;
 			stateLabel.setText("");
-			fillContainerTable(containerChoice.getValue());
+			ScrollBar bar = getVerticalScrollbar(counterTableView);
+			bar.valueProperty().addListener(this::scrolledCounters);
+			fillContainerTable(0);
 		}
 	}
 
-	private void fillContainerTable(String storeName) {
-		if(storeName == null) {
-			storeName = containerChoice.getValue();
+	private void scrolledCounters(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+		double value = newValue.doubleValue();
+		log.debug("Scrolled to {}", value);
+		ScrollBar bar = getVerticalScrollbar(counterTableView);
+		if(value == bar.getMax()) {
+			int page = goodsFullList.size() / 100;
+			double targetValue = value * goodsFullList.size();
+			fillContainerTable(page);
+			bar.setValue(targetValue / goodsFullList.size());
 		}
-		goodsFullList.clear();
+	}
+
+	private void fillContainerTable(int page) {
+		if(page == 0) {
+			goodsFullList.clear();
+		}
+		Pageable pageable = new PageRequest(page, 100, new Sort(Sort.Direction.ASC, "id"));
+		String container = containerChoice.getValue();
 		List<Counter> counters = new ArrayList<>();
-		if(!storeName.equals(ALL_STORES)) {
-			Store store = storeService.getStoreByName(storeName);
-			counters.addAll(counterService.getCountersListByStore(store));
-		} else {
-			counters.addAll(counterService.getCountersList());
-		}
-
-		goodsFullList = FXCollections.observableList(counters);
-		counterTableView.setItems(goodsFullList);
-		counterTableView.setOnKeyPressed(event -> {
-			if(event.getCode() == KeyCode.SPACE) {
-				Goods selectedGoods = counterTableView.getSelectionModel().getSelectedItem().getGoods();
-				if(selectedGoods != null) {
-					goodsName.setValue(selectedGoods.getName());
-					storeChoise.setValue(counterTableView.getSelectionModel().getSelectedItem().getStoreName());
-					selectionModel.select(salesTab);
-				}
-			} else if(event.getCode() == KeyCode.A) {
-				Goods selectedGoods = counterTableView.getSelectionModel().getSelectedItem().getGoods();
-				analogsMode = !analogsMode;
-				if(analogsMode) {
-					log.info("Analogs called...");
-					stateLabel.setText("Аналоги для " + selectedGoods.getName());
-					Set<Goods> analogs = goodsService.getGoodsAnalogs(selectedGoods);
-					List<Counter> analogsCounters = new ArrayList<>();
-					if(ALL_STORES.equals(containerChoice.getValue())) {
-						analogsCounters.addAll(counterService.searchCountersByGoods(new ArrayList<>(analogs)));
-					} else {
-						Store store = storeService.getStoreByName(containerChoice.getValue());
-						analogsCounters.addAll(counterService.searchCountersByGoodsAndStore(new ArrayList<>(analogs), store));
-					}
-
-					goodsFullList = FXCollections.observableList(analogsCounters);
-					counterTableView.setItems(goodsFullList);
-					counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-				} else {
-					log.info("Base mode...");
-					stateLabel.setText("");
-					fillContainerTable(containerChoice.getValue());
+		if(analogsMode || StringUtils.isNoneEmpty(searchTextField.getText())) {
+			List<Goods> goods = new ArrayList<>();
+			if(analogsMode) {
+				log.info("Analogs called...");
+				stateLabel.setText("Аналоги для " + selectedCounter.getGoods().getName());
+				goods.addAll(goodsService.getGoodsAnalogs(selectedCounter.getGoods()));
+			} else {
+				goods.addAll(goodsService.searchGoods(searchTextField.getText()));
+				if(goods.isEmpty()) {
+					return;
 				}
 			}
-		});
+			findCountersByGoods(goods, counters, pageable);
+		} else {
+			log.info("Base mode...");
+			stateLabel.setText("");
+			if(ALL_STORES.equals(container)) {
+				counters.addAll(counterService.getCountersPage(pageable).getContent());
+			} else {
+				Store store = storeService.getStoreByName(container);
+				counters.addAll(counterService.getCountersListByStore(store, pageable).getContent());
+			}
+		}
+		goodsFullList.addAll(counters);
+		counterTableView.setItems(goodsFullList);
 	}
 
 	private void initCounterTableFields() {
@@ -492,9 +507,9 @@ public class MainController {
 
 	@FXML
 	protected void showAddGoodsStage() {
-		boolean okClicked = mainApp.showCounterEditDialog();
+		boolean okClicked = mainApp.showCounterEditDialog(analogsMode, selectedCounter);
 		if(okClicked) {
-			fillContainerTable(containerChoice.getValue());
+			fillContainerTable(0);
 		}
 	}
 
@@ -739,7 +754,7 @@ public class MainController {
 						Goods goods = goodsService.getGoodsByName(goodsDTO.getName());
 						if(goods == null) {
 							goods = new Goods();
-							goods.setName(goodsDTO.getName());
+							goods.setName(goodsDTO.getName().replaceAll("\\s+", " "));
 							goods.setDescription(goodsDTO.getDescription());
 							goods.setAnalogousType(goodsDTO.getAnalogousType());
 							goodsService.addGoods(goods);
@@ -771,7 +786,7 @@ public class MainController {
 					}
 					updateMessage("Виведення таблиці...");
 				}
-				fillContainerTable(storeChoise.getValue());
+				fillContainerTable(0);
 				updateProgress(1, 1);
 				importCount.setDisable(false);
 				exportCount.setDisable(false);
@@ -782,25 +797,13 @@ public class MainController {
 		};
 	}
 
-	private void searchField(String text) {
-		goodsFullList.clear();
-		List<Goods> goods = goodsService.searchGoods(text);
-		if(goods.isEmpty()) {
-			return;
-		}
-		List<Counter> counters = new ArrayList<>();
+	private void findCountersByGoods(List<Goods> goods, List<Counter> counters, Pageable pageable) {
 		if(ALL_STORES.equals(storeChoise.getValue())) {
-			counters.addAll(counterService.searchCountersByGoods(goods));
+			counters.addAll(counterService.searchCountersByGoods(goods, pageable).getContent());
 		} else {
 			Store store = storeService.getStoreByName(storeChoise.getValue());
-			counters.addAll(counterService.searchCountersByGoodsAndStore(goods, store));
+			counters.addAll(counterService.searchCountersByGoodsAndStore(goods, store, pageable).getContent());
 		}
-
-		goodsFullList = FXCollections.observableList(counters);
-		counterTableView.setItems(goodsFullList);
-		counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-		System.out.println(text);
 	}
 
 	@FXML
@@ -850,7 +853,7 @@ public class MainController {
 				updateMessage("Форматування...");
 				updateProgress(0.1, 1);
 				for(Goods goods : goodses) {
-					goods.setName(goods.getName().replaceAll("\\s+", ""));
+					goods.setName(goods.getName().replaceAll("\\s+", " "));
 				}
 				updateProgress(0.3, 1);
 				updateMessage("Занесення в базу...");

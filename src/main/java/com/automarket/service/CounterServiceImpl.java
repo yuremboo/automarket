@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CounterServiceImpl implements CounterService {
@@ -30,7 +31,7 @@ public class CounterServiceImpl implements CounterService {
 
 	@Override
 	public void addCounter(Counter counter) {
-		counterDAO.addCounter(counter);
+		counterJpaRepository.save(counter);
 	}
 
 	@Override
@@ -41,13 +42,7 @@ public class CounterServiceImpl implements CounterService {
 
 	@Override
 	public void updateCounter(Counter counter) {
-		counterDAO.updateCounter(counter);
-	}
-
-	@Override
-	public Counter getCounterById(int id) {
-		// TODO Auto-generated method stub
-		return null;
+		counterJpaRepository.save(counter);
 	}
 
     @Override
@@ -60,9 +55,10 @@ public class CounterServiceImpl implements CounterService {
 		return counterJpaRepository.findAll();
 	}
 
+	@Transactional
     @Override
-    public List<Counter> searchCountersByGoods(List<Goods> goodsList) {
-        return counterJpaRepository.findAllByGoodsIn(goodsList);
+    public Page<Counter> searchCountersByGoods(List<Goods> goodsList, Pageable pageable) {
+        return counterJpaRepository.findAllByGoodsIn(goodsList, pageable);
     }
 
     @Override
@@ -101,9 +97,16 @@ public class CounterServiceImpl implements CounterService {
         counterDAO.addOrUpdateCounterList(counterList);
     }
 
+    @Transactional
 	@Override
-	public List<Counter> searchCountersByGoodsAndStore(List<Goods> goods, Store store) {
-		return counterJpaRepository.findAllByGoodsInAndStore(goods, store);
+	public Page<Counter> searchCountersByGoodsAndStore(List<Goods> goods, Store store, Pageable pageable) {
+		return counterJpaRepository.findAllByGoodsInAndStore(goods, store, pageable);
+	}
+
+	@Transactional
+	@Override
+	public Page<Counter> getCountersPage(Pageable pageable) {
+		return counterJpaRepository.findAll(pageable);
 	}
 
 }

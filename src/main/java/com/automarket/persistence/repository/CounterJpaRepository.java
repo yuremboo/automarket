@@ -16,9 +16,9 @@ public interface CounterJpaRepository extends JpaRepository<Counter, Integer> {
 
 	Page<Counter> findAllByStore(Store store, Pageable pageable);
 
-	List<Counter> findAllByGoodsIn(List<Goods> goodsList);
+	Page<Counter> findAllByGoodsIn(List<Goods> goodsList, Pageable pageable);
 
-	List<Counter> findAllByGoodsInAndStore(List<Goods> goods, Store store);
+	Page<Counter> findAllByGoodsInAndStore(List<Goods> goods, Store store, Pageable pageable);
 
 	List<Counter> findAllByStore(Store store);
 }
