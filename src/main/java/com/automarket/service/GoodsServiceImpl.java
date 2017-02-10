@@ -1,6 +1,8 @@
 package com.automarket.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -75,19 +77,23 @@ public class GoodsServiceImpl implements GoodsService {
     @Transactional
 	@Override
 	public Set<Goods> addAnalogs(Goods goods, Set<Goods> analogs) {
-		Goods goodsFromDb = goodsJpaRepository.findOne(goods.getId());
-		goodsFromDb.getMyAnalogs().addAll(analogs);
-		goodsJpaRepository.saveAndFlush(goodsFromDb);
-	    return goodsFromDb.getAllAnalogs();
+	    Integer analogousType = goods.getAnalogousType();
+	    if(analogousType == null) {
+		    analogousType = goodsJpaRepository.findMaxAnalogousType();
+		    analogousType = analogousType == null ? 1 : analogousType + 1;
+		    goods.setAnalogousType(analogousType);
+		    analogs.add(goods);
+	    }
+	    return new HashSet<>(goodsJpaRepository.save(analogs));
 	}
 
 	@Transactional
 	@Override
 	public Set<Goods> getGoodsAnalogs(Goods selectedGoods) {
-		Goods goodsFromDb = goodsJpaRepository.findOne(selectedGoods.getId());
-		Hibernate.initialize(goodsFromDb.getAnalogsToMe());
-		Hibernate.initialize(goodsFromDb.getMyAnalogs());
-		return goodsFromDb.getAllAnalogs();
+		if(selectedGoods.getAnalogousType() == null) {
+			return Collections.singleton(selectedGoods);
+		}
+		return goodsJpaRepository.findAllByAnalogousType(selectedGoods.getAnalogousType());
 	}
 
 	@Transactional

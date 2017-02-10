@@ -107,7 +107,7 @@ public class CounterEditDialogController {
 			Store store = storeService.getStoreByName(containerChoice.getValue());
 			if(goods == null) {
 				goods = new Goods();
-				goods.setName(goodsBox.getValue());
+				goods.setName(goodsBox.getValue().replaceAll("\\s+", " "));
 				goods.setDescription(goodsBox.getValue());
 				goods = goodsService.addGoods(goods);
 			}

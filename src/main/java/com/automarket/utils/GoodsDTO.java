@@ -6,6 +6,7 @@ public class GoodsDTO {
 	private String description;
 	private String store;
 	private Integer count;
+	private Integer analogousType;
 
 	public String getName() {
 		return name;
@@ -39,6 +40,14 @@ public class GoodsDTO {
 		this.count = count;
 	}
 
+	public Integer getAnalogousType() {
+		return analogousType;
+	}
+
+	public void setAnalogousType(Integer analogousType) {
+		this.analogousType = analogousType;
+	}
+
 	@Override
 	public String toString() {
 		return "GoodsDTO{" +
@@ -46,6 +55,7 @@ public class GoodsDTO {
 				", description='" + description + '\'' +
 				", store='" + store + '\'' +
 				", count=" + count +
+				", analogousType=" + analogousType +
 				'}';
 	}
 }

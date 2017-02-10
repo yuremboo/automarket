@@ -96,6 +96,8 @@ public class MainController {
 	@FXML
 	private Label goodsValidLabel;
 	@FXML
+	private Label stateLabel;
+	@FXML
 	private TextField goodsCount;
 	@FXML
 	private TableView<Goods> goodsTable;
@@ -259,7 +261,7 @@ public class MainController {
 		Goods goods = new Goods();
 		boolean okClicked = mainApp.showGoodsEditDialog(goods);
 		if(okClicked) {
-			goods.setName(goods.getName().replaceAll("\\s+", ""));
+			goods.setName(goods.getName().replaceAll("\\s+", " "));
 			goodsService.addGoods(goods);
 		}
 	}
@@ -291,8 +293,8 @@ public class MainController {
 
 		log.debug("Sale " + goods + " " + store);
 
-		infoLabel.setText(goods.toString());
 		int countLeft;
+		infoLabel.setText(goods.toString());
 		try {
 			countLeft = counterService.sale(goods, store, count);
 		} catch(RuntimeException e) {
@@ -343,9 +345,9 @@ public class MainController {
 
 	private void scrolledGoods(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 		double value = newValue.doubleValue();
-		log.debug("Scrolled to ", value);
+		log.debug("Scrolled to {}", value);
 		ScrollBar bar = getVerticalScrollbar(goodsTable);
-		if (value == bar.getMax()) {
+		if(value == bar.getMax()) {
 			System.out.println("Adding new persons.");
 			int page = goodsList.size() / 100;
 			double targetValue = value * goodsList.size();
@@ -360,10 +362,10 @@ public class MainController {
 
 	private ScrollBar getVerticalScrollbar(TableView<?> table) {
 		ScrollBar result = null;
-		for (Node n : table.lookupAll(".scroll-bar")) {
-			if (n instanceof ScrollBar) {
+		for(Node n : table.lookupAll(".scroll-bar")) {
+			if(n instanceof ScrollBar) {
 				ScrollBar bar = (ScrollBar) n;
-				if (bar.getOrientation().equals(Orientation.VERTICAL)) {
+				if(bar.getOrientation().equals(Orientation.VERTICAL)) {
 					result = bar;
 				}
 			}
@@ -382,6 +384,8 @@ public class MainController {
 	protected void containerSelected() {
 		if(selectionModel.getSelectedItem().equals(containerTab)) {
 			log.debug("Containers...");
+			analogsMode = false;
+			stateLabel.setText("");
 			fillContainerTable(containerChoice.getValue());
 		}
 	}
@@ -414,6 +418,7 @@ public class MainController {
 				analogsMode = !analogsMode;
 				if(analogsMode) {
 					log.info("Analogs called...");
+					stateLabel.setText("Аналоги для " + selectedGoods.getName());
 					Set<Goods> analogs = goodsService.getGoodsAnalogs(selectedGoods);
 					List<Counter> analogsCounters = new ArrayList<>();
 					if(ALL_STORES.equals(containerChoice.getValue())) {
@@ -428,6 +433,8 @@ public class MainController {
 					counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 				} else {
 					log.info("Base mode...");
+					stateLabel.setText("");
+					fillContainerTable(containerChoice.getValue());
 				}
 			}
 		});
@@ -734,6 +741,7 @@ public class MainController {
 							goods = new Goods();
 							goods.setName(goodsDTO.getName());
 							goods.setDescription(goodsDTO.getDescription());
+							goods.setAnalogousType(goodsDTO.getAnalogousType());
 							goodsService.addGoods(goods);
 						}
 

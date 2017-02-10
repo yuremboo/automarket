@@ -51,6 +51,8 @@ public class WorkWithExcel {
 								goodsDTO.setCount(Integer.valueOf(dataFormatter.formatCellValue(cell)));
 								break;
 							case 3:
+								goodsDTO.setAnalogousType(Integer.valueOf(dataFormatter.formatCellValue(cell)));
+							case 4:
 								goodsDTO.setDescription(dataFormatter.formatCellValue(cell));
 							default:
 								break;
@@ -61,24 +63,9 @@ public class WorkWithExcel {
 			}
 			inputStream.close();
 		} catch(Exception e) {
-			System.err.println(e);
+			throw new RuntimeException("Failed to read data from excel", e);
 		}
 		return result;
-	}
-
-	private static Object getCellValue(Cell cell) {
-		Object object;
-		int i1 = cell.getCellType();
-		if(i1 == Cell.CELL_TYPE_BOOLEAN) {
-			object = cell.getBooleanCellValue();
-		} else if(i1 == Cell.CELL_TYPE_NUMERIC) {
-			object = cell.getNumericCellValue();
-		} else if(i1 == Cell.CELL_TYPE_STRING) {
-			object = cell.getStringCellValue();
-		} else {
-			object = null;
-		}
-		return object;
 	}
 
 	public static boolean writeToExcell(Map<Integer, ArrayList<Object>> data) {
