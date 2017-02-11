@@ -222,10 +222,10 @@ public class MainController {
 				}
 			} else if(event.getCode() == KeyCode.A) {
 				analogsMode = !analogsMode;
-				fillContainerTable(0);
+				new Thread(fillContainerTableTask(0)).start();
 			}
 		});
-		searchTextField.textProperty().addListener((observableValue, s, s2) -> fillContainerTable(0));
+		searchTextField.textProperty().addListener((observableValue, s, s2) -> new Thread(fillContainerTableTask(0)).start());
 		counterTableView.setOnMouseClicked(event -> selectedCounter = counterTableView.getSelectionModel().getSelectedItem());
 	}
 
@@ -255,7 +255,8 @@ public class MainController {
 			containerChoice.setValue(ALL_STORES);
 		}
 		storeFilterChoice.setItems(storesList);
-		containerChoice.getSelectionModel().selectedItemProperty().addListener((observableValue, s, s2) -> fillContainerTable(0));
+		containerChoice.getSelectionModel().selectedItemProperty()
+				.addListener((observableValue, s, s2) -> new Thread(fillContainerTableTask(0)).start());
 	}
 
 	private void initializeDatePickers() {
@@ -405,7 +406,7 @@ public class MainController {
 			stateLabel.setText("");
 			ScrollBar bar = getVerticalScrollbar(counterTableView);
 			bar.valueProperty().addListener(this::scrolledCounters);
-			fillContainerTable(0);
+			new Thread(fillContainerTableTask(0)).start();
 		}
 	}
 
@@ -421,7 +422,8 @@ public class MainController {
 		}
 	}
 
-	private void fillContainerTable(int page) {
+	private boolean fillContainerTable(int page) {
+		Platform.runLater(() -> stateLabel.setText(""));
 		if(page == 0) {
 			goodsFullList.clear();
 		}
@@ -432,12 +434,13 @@ public class MainController {
 			List<Goods> goods = new ArrayList<>();
 			if(analogsMode) {
 				log.info("Analogs called...");
-				stateLabel.setText("Аналоги для " + selectedCounter.getGoods().getName());
+				Platform.runLater(() -> stateLabel.setText("Аналоги для " + selectedCounter.getGoods().getName()));
 				goods.addAll(goodsService.getGoodsAnalogs(selectedCounter.getGoods()));
 			} else {
 				goods.addAll(goodsService.searchGoods(searchTextField.getText()));
 				if(goods.isEmpty()) {
-					return;
+					counterTableView.setDisable(false);
+					return true;
 				}
 			}
 			findCountersByGoods(goods, counters, pageable);
@@ -453,6 +456,18 @@ public class MainController {
 		}
 		goodsFullList.addAll(counters);
 		counterTableView.setItems(goodsFullList);
+		counterTableView.setDisable(false);
+		return true;
+	}
+
+	private Task<Boolean> fillContainerTableTask(int page) {
+		counterTableView.setDisable(true);
+		return new Task<Boolean>() {
+			@Override
+			protected Boolean call() throws Exception {
+				return fillContainerTable(page);
+			}
+		};
 	}
 
 	private void initCounterTableFields() {
@@ -509,7 +524,7 @@ public class MainController {
 	protected void showAddGoodsStage() {
 		boolean okClicked = mainApp.showCounterEditDialog(analogsMode, selectedCounter);
 		if(okClicked) {
-			fillContainerTable(0);
+			new Thread(fillContainerTableTask(0)).start();
 		}
 	}
 
@@ -729,7 +744,7 @@ public class MainController {
 	protected void showCopyright() {
 		String s = System.getProperty("line.separator");
 		showInformationDialog(primaryStage, "Про програму", "Програма для ведення обліку товару." + s + "Розробник Юрій Михалецький" + s
-				+ "email:yurik.my@gmail.com" + s + "All rights reserved © Yurembo 2014.");
+				+ "email:yurik.my@gmail.com" + s + "All rights reserved © Yurembo 2014-2017.");
 	}
 
 	private Task importCounters(final File file) {
@@ -751,6 +766,12 @@ public class MainController {
 						if(goodsDTO.getName() == null || goodsDTO.getName().trim().isEmpty()) {
 							continue;
 						}
+						Store store = storeCache.get(goodsDTO.getStore());
+						if(store == null) {
+							store = storeService.getStoreByName(goodsDTO.getStore());
+							storeCache.put(goodsDTO.getStore(), store);
+						}
+						Counter counter = null;
 						Goods goods = goodsService.getGoodsByName(goodsDTO.getName());
 						if(goods == null) {
 							goods = new Goods();
@@ -758,17 +779,15 @@ public class MainController {
 							goods.setDescription(goodsDTO.getDescription());
 							goods.setAnalogousType(goodsDTO.getAnalogousType());
 							goodsService.addGoods(goods);
+						} else {
+							counter = counterService.getCounterByGoodsStore(goods, store);
 						}
 
-						Store store = storeCache.get(goodsDTO.getStore());
-						if(store == null) {
-							store = storeService.getStoreByName(goodsDTO.getStore());
-							storeCache.put(goodsDTO.getStore(), store);
-						}
-
-						Counter counter = counterService.getCounterByGoodsStore(goods, store);
 						if(counter == null) {
 							counter = new Counter();
+						}
+						if(goodsDTO.getCount() == null) {
+							goodsDTO.setCount(0);
 						}
 						counter.setCount(counter.getCount() + goodsDTO.getCount());
 						counter.setGoods(goods);
@@ -782,11 +801,13 @@ public class MainController {
 						circulation.setGoods(goods);
 						circulation.setStore(store);
 						circulation.setSale(false);
+						circulationsService.addCirculation(circulation);
 						updateProgress(++i, data.size());
+						updateMessage("Завантаження тоару..." + i + "/" + data.size());
 					}
 					updateMessage("Виведення таблиці...");
 				}
-				fillContainerTable(0);
+				new Thread(fillContainerTableTask(0)).start();
 				updateProgress(1, 1);
 				importCount.setDisable(false);
 				exportCount.setDisable(false);
@@ -798,10 +819,10 @@ public class MainController {
 	}
 
 	private void findCountersByGoods(List<Goods> goods, List<Counter> counters, Pageable pageable) {
-		if(ALL_STORES.equals(storeChoise.getValue())) {
+		if(ALL_STORES.equals(containerChoice.getValue())) {
 			counters.addAll(counterService.searchCountersByGoods(goods, pageable).getContent());
 		} else {
-			Store store = storeService.getStoreByName(storeChoise.getValue());
+			Store store = storeService.getStoreByName(containerChoice.getValue());
 			counters.addAll(counterService.searchCountersByGoodsAndStore(goods, store, pageable).getContent());
 		}
 	}

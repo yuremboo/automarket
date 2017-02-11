@@ -173,7 +173,7 @@
                                        <HBox.margin>
                                           <Insets />
                                        </HBox.margin></TextField>
-                                    <Label fx:id="stateLabel" wrapText="true" prefHeight="39.0" prefWidth="152.0" />
+                                    <Label fx:id="stateLabel" prefHeight="39.0" prefWidth="152.0" wrapText="true" />
                                             </children>
                                             <padding>
                                                 <Insets bottom="10.0" top="10.0" />
