@@ -27,6 +27,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -40,6 +41,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -70,6 +72,11 @@ public class MainController {
 
 	private static final Logger log = LoggerFactory.getLogger(MainController.class);
 	private static final String ALL_STORES = "Всі";
+	private static final String TABLE_PROGRESS_INDICATOR = "tableProgressIndicator";
+	private static final String GOODS_NAME_ID = "goodsName";
+	private static final String STORE_NAME_ID = "storeName";
+	private static final String COUNT_ID = "count";
+	private static final String DATE_ID = "date";
 
 	private MainApp mainApp;
 	private Stage primaryStage;
@@ -164,6 +171,8 @@ public class MainController {
 	private TextField searchTextField;
 	@FXML
 	private Label statusLabel;
+	@FXML
+	private StackPane tableStackPane;
 
 	private final GoodsService goodsService;
 	private final CounterService counterService;
@@ -208,25 +217,34 @@ public class MainController {
 		initializeGoods();
 		initReportTable();
 		initCounterTable();
+		progressBar.setVisible(false);
+		progressIndicator.setVisible(false);
 	}
 
 	private void initCounterTable() {
 		counterTableView.setOnKeyPressed(event -> {
 			selectedCounter = counterTableView.getSelectionModel().getSelectedItem();
-			Goods selectedGoods = selectedCounter.getGoods();
-			if(event.getCode() == KeyCode.SPACE) {
-				if(selectedGoods != null) {
-					goodsName.setValue(selectedGoods.getName());
-					storeChoise.setValue(counterTableView.getSelectionModel().getSelectedItem().getStoreName());
-					selectionModel.select(salesTab);
+			if(selectedCounter != null) {
+				Goods selectedGoods = selectedCounter.getGoods();
+				if(event.getCode() == KeyCode.SPACE) {
+					if(selectedGoods != null) {
+						goodsName.setValue(selectedGoods.getName());
+						storeChoise.setValue(counterTableView.getSelectionModel().getSelectedItem().getStoreName());
+						selectionModel.select(salesTab);
+					}
+				} else if(event.getCode() == KeyCode.A) {
+					analogsMode = !analogsMode;
+					new Thread(fillContainerTableTask(0)).start();
 				}
-			} else if(event.getCode() == KeyCode.A) {
-				analogsMode = !analogsMode;
-				new Thread(fillContainerTableTask(0)).start();
 			}
 		});
 		searchTextField.textProperty().addListener((observableValue, s, s2) -> new Thread(fillContainerTableTask(0)).start());
 		counterTableView.setOnMouseClicked(event -> selectedCounter = counterTableView.getSelectionModel().getSelectedItem());
+		counterTableView.setOnSort(event -> {
+			if(event.getSource().getSortOrder().size() == 1 && COUNT_ID.equals(event.getSource().getSortOrder().get(0).getId())) {
+				return;
+			}
+			new Thread(fillContainerTableTask(0)).start();});
 	}
 
 	private void initializeGoods() {
@@ -427,7 +445,28 @@ public class MainController {
 		if(page == 0) {
 			goodsFullList.clear();
 		}
-		Pageable pageable = new PageRequest(page, 100, new Sort(Sort.Direction.ASC, "id"));
+		ObservableList<TableColumn<Counter, ?>> sortOrder = counterTableView.getSortOrder();
+		Sort sort = null;
+		for(TableColumn tableColumn : sortOrder) {
+			Sort.Direction direction = Sort.Direction.ASC;
+			TableColumn.SortType sortType = tableColumn.getSortType();
+			String sortColumn = "id";
+			if(GOODS_NAME_ID.equals(tableColumn.getId())) {
+				sortColumn = "goods.name";
+			} else if(STORE_NAME_ID.equals(tableColumn.getId())) {
+				sortColumn = "store.name";
+			}
+			if(sortType == TableColumn.SortType.DESCENDING) {
+				direction = Sort.Direction.DESC;
+			}
+			if(sort == null) {
+				sort = new Sort(direction, sortColumn);
+			} else {
+				sort.and(new Sort(direction, sortColumn));
+			}
+		}
+
+		Pageable pageable = new PageRequest(page, 100, sort);
 		String container = containerChoice.getValue();
 		List<Counter> counters = new ArrayList<>();
 		if(analogsMode || StringUtils.isNoneEmpty(searchTextField.getText())) {
@@ -461,19 +500,36 @@ public class MainController {
 	}
 
 	private Task<Boolean> fillContainerTableTask(int page) {
-		counterTableView.setDisable(true);
+		addProgressIndicator(tableStackPane, counterTableView);
 		return new Task<Boolean>() {
 			@Override
 			protected Boolean call() throws Exception {
-				return fillContainerTable(page);
+				boolean result = fillContainerTable(page);
+				Platform.runLater(() -> removeProgressIndicator(tableStackPane));
+				return result;
 			}
 		};
 	}
 
+	private void addProgressIndicator(StackPane pane, Control controlToDisable) {
+		ProgressIndicator pi = new ProgressIndicator();
+		pi.setMaxHeight(40);
+		pi.setId(TABLE_PROGRESS_INDICATOR);
+		controlToDisable.setDisable(true);
+		pane.getChildren().add(pi);
+	}
+
+	private void removeProgressIndicator(StackPane pane) {
+		pane.getChildren().removeIf(node -> TABLE_PROGRESS_INDICATOR.equals(node.getId()));
+	}
+
 	private void initCounterTableFields() {
-		goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
-		goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
-		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<>("count"));
+		goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<>(GOODS_NAME_ID));
+		goodsCounterColumnName.setId(GOODS_NAME_ID);
+		goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<>(STORE_NAME_ID));
+		goodsCounterColumnContainer.setId(STORE_NAME_ID);
+		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
+		goodsCounterColumnC.setId(COUNT_ID);
 		counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
 
@@ -496,8 +552,8 @@ public class MainController {
 	}
 
 	private void initCommodityTable() {
-		commodityCirculationColumnName.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
-		commodityCirculationColumnCount.setCellValueFactory(new PropertyValueFactory<>("count"));
+		commodityCirculationColumnName.setCellValueFactory(new PropertyValueFactory<>(GOODS_NAME_ID));
+		commodityCirculationColumnCount.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
 		commodityCirculationColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
 		commodityCirculationTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
@@ -622,10 +678,10 @@ public class MainController {
 	}
 
 	private void initReportTable() {
-		goodsReportColumn.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
-		countReportColumn.setCellValueFactory(new PropertyValueFactory<>("count"));
-		storeReportColumn.setCellValueFactory(new PropertyValueFactory<>("storeName"));
-		dateReportColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+		goodsReportColumn.setCellValueFactory(new PropertyValueFactory<>(GOODS_NAME_ID));
+		countReportColumn.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
+		storeReportColumn.setCellValueFactory(new PropertyValueFactory<>(STORE_NAME_ID));
+		dateReportColumn.setCellValueFactory(new PropertyValueFactory<>(DATE_ID));
 		saleReportColumn.setCellValueFactory(new PropertyValueFactory<>("saleProp"));
 
 		reportTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -752,6 +808,8 @@ public class MainController {
 
 			@Override
 			protected Object call() throws Exception {
+				progressBar.setVisible(true);
+				progressIndicator.setVisible(true);
 				updateProgress(0, 1);
 				if(file != null) {
 					updateMessage("Зчитування файлу...");
@@ -813,6 +871,8 @@ public class MainController {
 				exportCount.setDisable(false);
 				addCount.setDisable(false);
 				updateMessage("");
+				progressBar.setVisible(false);
+				progressIndicator.setVisible(false);
 				return true;
 			}
 		};
