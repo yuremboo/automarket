@@ -72,7 +72,7 @@ public class CounterServiceImpl implements CounterService {
     }
 
     @Override
-	public int sale(Goods goods, Store store, int count) {
+	public int sale(Goods goods, Store store, int count, Double price) {
 	    Counter goodsCount = counterJpaRepository.findOneByGoodsAndStore(goods, store);
 	    if(goodsCount.getCount() < count) {
 		    throw new RuntimeException("Not enough goods"); //TODO: change
@@ -82,6 +82,7 @@ public class CounterServiceImpl implements CounterService {
 
 	    CommodityCirculation commodityCirculation = new CommodityCirculation(goods, count, store);
 	    commodityCirculation.setSale(true);
+	    commodityCirculation.setSalePrice(price);
 	    circulationsService.addCirculation(commodityCirculation);
 
 	    return goodsCount.getCount();

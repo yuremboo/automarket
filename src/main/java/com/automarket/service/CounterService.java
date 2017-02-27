@@ -17,7 +17,7 @@ public interface CounterService {
     Page<Counter> searchCountersByGoods(List<Goods> goodsList, Pageable pageable);
     Page<Counter> getCountersListByStore(Store store, Pageable pageable);
     List<Counter> getCountersListByStore(Store store);
-	int sale(Goods goods, Store store, int count);
+	int sale(Goods goods, Store store, int count, Double price);
     Counter addOrUpdateCounter(Counter counter);
     void addOrUpdateCounterList(List<Counter> counterList);
 

@@ -110,6 +110,8 @@ public class MainController {
 	@FXML
 	private TextField goodsCount;
 	@FXML
+	private TextField goodsPrice;
+	@FXML
 	private TableView<Goods> goodsTable;
 	@FXML
 	private TableView<CommodityCirculation> commodityCirculationTable;
@@ -236,6 +238,8 @@ public class MainController {
 					if(selectedGoods != null) {
 						goodsName.setValue(selectedGoods.getName());
 						storeChoise.setValue(counterTableView.getSelectionModel().getSelectedItem().getStoreName());
+						String priceString = selectedGoods.getPrice() == null ? "" : String.valueOf(selectedGoods.getPrice());
+						goodsPrice.setText(priceString);
 						selectionModel.select(salesTab);
 					}
 				} else if(event.getCode() == KeyCode.A) {
@@ -320,8 +324,10 @@ public class MainController {
 		}
 		String goodsNameStr = goodsName.getValue();
 		int count;
+		Double price;
 		try {
 			count = Integer.parseInt(goodsCount.getText());
+			price = StringUtils.isBlank(goodsPrice.getText()) ? null : Double.valueOf(goodsPrice.getText());
 		} catch(Exception e) {
 			log.error(e.getMessage());
 			countValidLabel.setText("Введіть число!");
@@ -338,7 +344,7 @@ public class MainController {
 		int countLeft;
 		infoLabel.setText(goods.toString());
 		try {
-			countLeft = counterService.sale(goods, store, count);
+			countLeft = counterService.sale(goods, store, count, price);
 		} catch(RuntimeException e) {
 			infoLabel.setText("Не вистачає кількості одиниць товару для продажу! Або виникла непередбачувана помилка.");
 			return;

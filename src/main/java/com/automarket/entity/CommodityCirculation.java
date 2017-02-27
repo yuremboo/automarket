@@ -36,6 +36,7 @@ public class CommodityCirculation {
 	private String goodsName;
 	private String storeName;
     private String saleProp;
+    private Double salePrice;
 	
 	public CommodityCirculation() {
 	}
@@ -103,6 +104,16 @@ public class CommodityCirculation {
 		this.store = store;
 		this.storeName = store.getName();
 	}
+
+	@Column(name = "salePrice")
+	public Double getSalePrice() {
+		return salePrice;
+	}
+
+	public void setSalePrice(Double salePrice) {
+		this.salePrice = salePrice;
+	}
+
 	@Transient
 	public String getGoodsName() {
 		return goodsName;
