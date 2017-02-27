@@ -5,6 +5,7 @@ public class GoodsDTO {
 	private String name;
 	private String description;
 	private String store;
+	private Double price;
 	private Integer count;
 	private Integer analogousType;
 
@@ -32,6 +33,14 @@ public class GoodsDTO {
 		this.store = store;
 	}
 
+	public Double getPrice() {
+		return price;
+	}
+
+	public void setPrice(Double price) {
+		this.price = price;
+	}
+
 	public Integer getCount() {
 		return count;
 	}
@@ -54,6 +63,7 @@ public class GoodsDTO {
 				"name='" + name + '\'' +
 				", description='" + description + '\'' +
 				", store='" + store + '\'' +
+				", price=" + price +
 				", count=" + count +
 				", analogousType=" + analogousType +
 				'}';

@@ -171,6 +171,7 @@
                                                 <TableColumn fx:id="goodsCounterColumnName" prefWidth="75.0" text="Назва" />
                                                 <TableColumn fx:id="goodsCounterColumnContainer" prefWidth="75.0" text="Контейнер" />
                                                 <TableColumn fx:id="goodsCounterColumnC" prefWidth="75.0" text="Кількість" />
+                                                <TableColumn fx:id="goodsCounterPriceColumn" prefWidth="75.0" text="Ціна ($)" />
                                             </columns>
                                             <effect>
                                                 <InnerShadow />

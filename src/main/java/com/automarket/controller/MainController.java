@@ -13,6 +13,9 @@ import com.automarket.utils.GoodsDTO;
 import com.automarket.utils.Validator;
 import com.automarket.utils.WorkWithExcel;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -46,6 +49,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,8 +77,8 @@ public class MainController {
 	private static final Logger log = LoggerFactory.getLogger(MainController.class);
 	private static final String ALL_STORES = "Всі";
 	private static final String TABLE_PROGRESS_INDICATOR = "tableProgressIndicator";
-	private static final String GOODS_NAME_ID = "goodsName";
-	private static final String STORE_NAME_ID = "storeName";
+	private static final String GOODS_NAME_ID = "goods.name";
+	private static final String STORE_NAME_ID = "store.name";
 	private static final String COUNT_ID = "count";
 	private static final String DATE_ID = "date";
 
@@ -137,6 +141,8 @@ public class MainController {
 	private TableColumn<Counter, String> goodsCounterColumnContainer;
 	@FXML
 	private TableColumn<Counter, Integer> goodsCounterColumnC;
+	@FXML
+	private TableColumn<Counter, Double> goodsCounterPriceColumn;
 	@FXML
 	private TableView<CommodityCirculation> reportTableView;
 	@FXML
@@ -524,12 +530,14 @@ public class MainController {
 	}
 
 	private void initCounterTableFields() {
-		goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<>(GOODS_NAME_ID));
+		goodsCounterColumnName.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getGoods().getName()));
 		goodsCounterColumnName.setId(GOODS_NAME_ID);
-		goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<>(STORE_NAME_ID));
+		goodsCounterColumnContainer.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getStore().getName()));
 		goodsCounterColumnContainer.setId(STORE_NAME_ID);
 		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
 		goodsCounterColumnC.setId(COUNT_ID);
+		goodsCounterPriceColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getGoods().getPrice()));
+		goodsCounterPriceColumn.setId("goods.price");
 		counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
 
@@ -552,9 +560,9 @@ public class MainController {
 	}
 
 	private void initCommodityTable() {
-		commodityCirculationColumnName.setCellValueFactory(new PropertyValueFactory<>(GOODS_NAME_ID));
+		commodityCirculationColumnName.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getGoods().getName()));
 		commodityCirculationColumnCount.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
-		commodityCirculationColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
+		commodityCirculationColumnContainer.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getStore().getName()));
 		commodityCirculationTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
 
@@ -678,9 +686,9 @@ public class MainController {
 	}
 
 	private void initReportTable() {
-		goodsReportColumn.setCellValueFactory(new PropertyValueFactory<>(GOODS_NAME_ID));
+		goodsReportColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getGoods().getName()));
 		countReportColumn.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
-		storeReportColumn.setCellValueFactory(new PropertyValueFactory<>(STORE_NAME_ID));
+		storeReportColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getStore().getName()));
 		dateReportColumn.setCellValueFactory(new PropertyValueFactory<>(DATE_ID));
 		saleReportColumn.setCellValueFactory(new PropertyValueFactory<>("saleProp"));
 
@@ -865,7 +873,7 @@ public class MainController {
 					}
 					updateMessage("Виведення таблиці...");
 				}
-				new Thread(fillContainerTableTask(0)).start();
+				fillContainerTable(0);
 				updateProgress(1, 1);
 				importCount.setDisable(false);
 				exportCount.setDisable(false);

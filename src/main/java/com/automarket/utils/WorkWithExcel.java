@@ -51,8 +51,10 @@ public class WorkWithExcel {
 								goodsDTO.setCount(Integer.valueOf(dataFormatter.formatCellValue(cell)));
 								break;
 							case 3:
-								goodsDTO.setAnalogousType(Integer.valueOf(dataFormatter.formatCellValue(cell)));
+								goodsDTO.setPrice(Double.valueOf(dataFormatter.formatCellValue(cell)));
 							case 4:
+								goodsDTO.setAnalogousType(Integer.valueOf(dataFormatter.formatCellValue(cell)));
+							case 5:
 								goodsDTO.setDescription(dataFormatter.formatCellValue(cell));
 							default:
 								break;

@@ -42,6 +42,8 @@ public class CounterEditDialogController {
 	private TextField countField;
 	@FXML
 	private Label stateLabel;
+	@FXML
+	private TextField priceField;
 	private Stage dialogStage;
 	private final GoodsService goodsService;
 	private final CounterService counterService;
@@ -74,11 +76,6 @@ public class CounterEditDialogController {
 		goodsBox.getEditor().focusedProperty().addListener((observableValue, aBoolean1, aBoolean2) -> {
 			if(aBoolean2) {
 				searchGoods(goodsBox.getValue());
-			}
-		});
-		goodsBox.getEditor().focusedProperty().addListener((observableValue, aBoolean1, aBoolean2) -> {
-			if(aBoolean2) {
-				searchGoods(goodsBox.getValue());
 				new AutoCompleteComboBoxListener<>(goodsBox);
 			}
 		});
@@ -105,6 +102,7 @@ public class CounterEditDialogController {
 			goodsBox.setValue(counter.getGoodsName());
 			containerChoice.setValue(counter.getStoreName());
 			countField.setText(String.valueOf(counter.getCount()));
+			priceField.setText(counter.getGoods().getPrice() == null ? "" : String.valueOf(counter.getGoods().getPrice()));
 		}
 	}
 
@@ -129,6 +127,10 @@ public class CounterEditDialogController {
 				goods = new Goods();
 				goods.setName(goodsBox.getValue().replaceAll("\\s+", " "));
 				goods.setDescription(goodsBox.getValue());
+				goods.setPrice(Double.valueOf(priceField.getText()));
+				goods = goodsService.addGoods(goods);
+			} else {
+				goods.setPrice(Double.valueOf(priceField.getText()));
 				goods = goodsService.addGoods(goods);
 			}
 			if(analogMode) {
@@ -178,6 +180,7 @@ public class CounterEditDialogController {
 		goodNames.clear();
 		goodNames.addAll(goodsList.stream().map(Goods::getName).collect(Collectors.toList()));
 		goodsBox.setItems(goodNames);
+		goodsBox.setValue(s);
 	}
 
 	void setAnalogMode(boolean analogMode) {
