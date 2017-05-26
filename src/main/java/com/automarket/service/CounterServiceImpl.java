@@ -45,60 +45,60 @@ public class CounterServiceImpl implements CounterService {
 		counterJpaRepository.save(counter);
 	}
 
-    @Override
-    public Counter getCounterByGoodsStore(Goods goods, Store store) {
-        return counterJpaRepository.findOneByGoodsAndStore(goods, store);
-    }
+	@Override
+	public Counter getCounterByGoodsStore(Goods goods, Store store) {
+		return counterJpaRepository.findOneByGoodsAndStore(goods, store);
+	}
 
-    @Override
+	@Override
 	public List<Counter> getCountersList() {
 		return counterJpaRepository.findAll();
 	}
 
 	@Transactional
-    @Override
-    public Page<Counter> searchCountersByGoods(List<Goods> goodsList, Pageable pageable) {
-        return counterJpaRepository.findAllByGoodsIn(goodsList, pageable);
-    }
-
-    @Override
-    public Page<Counter> getCountersListByStore(Store store, Pageable pageable) {
-	    return counterJpaRepository.findAllByStore(store, pageable);
-    }
-
-    @Override
-    public List<Counter> getCountersListByStore(Store store) {
-	    return counterJpaRepository.findAllByStore(store);
-    }
-
-    @Override
-	public int sale(Goods goods, Store store, int count, Double price) {
-	    Counter goodsCount = counterJpaRepository.findOneByGoodsAndStore(goods, store);
-	    if(goodsCount.getCount() < count) {
-		    throw new RuntimeException("Not enough goods"); //TODO: change
-	    }
-	    goodsCount.setCount(goodsCount.getCount() - count);
-	    counterJpaRepository.saveAndFlush(goodsCount);
-
-	    CommodityCirculation commodityCirculation = new CommodityCirculation(goods, count, store);
-	    commodityCirculation.setSale(true);
-	    commodityCirculation.setSalePrice(price);
-	    circulationsService.addCirculation(commodityCirculation);
-
-	    return goodsCount.getCount();
+	@Override
+	public Page<Counter> searchCountersByGoods(List<Goods> goodsList, Pageable pageable) {
+		return counterJpaRepository.findAllByGoodsIn(goodsList, pageable);
 	}
 
-    @Override
-    public Counter addOrUpdateCounter(Counter counter) {
-        return counterJpaRepository.saveAndFlush(counter);
-    }
+	@Override
+	public Page<Counter> getCountersListByStore(Store store, Pageable pageable) {
+		return counterJpaRepository.findAllByStore(store, pageable);
+	}
 
-    @Override
-    public void addOrUpdateCounterList(List<Counter> counterList) {
-        counterDAO.addOrUpdateCounterList(counterList);
-    }
+	@Override
+	public List<Counter> getCountersListByStore(Store store) {
+		return counterJpaRepository.findAllByStore(store);
+	}
 
-    @Transactional
+	@Override
+	public int sale(Goods goods, Store store, int count, Double price) {
+		Counter goodsCount = counterJpaRepository.findOneByGoodsAndStore(goods, store);
+		if(goodsCount.getCount() < count) {
+			throw new RuntimeException("Not enough goods"); // TODO: change
+		}
+		goodsCount.setCount(goodsCount.getCount() - count);
+		counterJpaRepository.saveAndFlush(goodsCount);
+
+		CommodityCirculation commodityCirculation = new CommodityCirculation(goods, count, store);
+		commodityCirculation.setSale(true);
+		commodityCirculation.setSalePrice(price);
+		circulationsService.addCirculation(commodityCirculation);
+
+		return goodsCount.getCount();
+	}
+
+	@Override
+	public Counter addOrUpdateCounter(Counter counter) {
+		return counterJpaRepository.saveAndFlush(counter);
+	}
+
+	@Override
+	public void addOrUpdateCounterList(List<Counter> counterList) {
+		counterDAO.addOrUpdateCounterList(counterList);
+	}
+
+	@Transactional
 	@Override
 	public Page<Counter> searchCountersByGoodsAndStore(List<Goods> goods, Store store, Pageable pageable) {
 		return counterJpaRepository.findAllByGoodsInAndStore(goods, store, pageable);
@@ -110,4 +110,15 @@ public class CounterServiceImpl implements CounterService {
 		return counterJpaRepository.findAll(pageable);
 	}
 
+	@Transactional
+	@Override
+	public Page<Counter> getCountersByGoods(String searchTerm, Pageable pageable) {
+		return counterJpaRepository.findByGoodsName(searchTerm, pageable);
+	}
+
+	@Transactional
+	@Override
+	public Page<Counter> getCountersByGoodsAndStore(String searchTerm, Store store, Pageable pageable) {
+		return counterJpaRepository.findByGoodsNameAndStore(searchTerm, store, pageable);
+	}
 }

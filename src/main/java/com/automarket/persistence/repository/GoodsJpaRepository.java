@@ -1,6 +1,8 @@
 package com.automarket.persistence.repository;
 
 import com.automarket.entity.Goods;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,7 +14,8 @@ import java.util.Set;
 public interface GoodsJpaRepository extends JpaRepository<Goods, Long> {
 	Goods findOneByName(String name);
 
-	List<Goods> findByNameIgnoreCaseContaining(String text);
+	@Query("select g from Goods g where g.name like %?1%")
+	List<Goods> findByName(String text, Pageable pageable);
 
 	Set<Goods> findAllByAnalogousType(Integer analogousType);
 

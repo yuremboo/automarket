@@ -13,7 +13,6 @@ import com.automarket.utils.GoodsDTO;
 import com.automarket.utils.Validator;
 import com.automarket.utils.WorkWithExcel;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
@@ -49,7 +48,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +79,7 @@ public class MainController {
 	private static final String STORE_NAME_ID = "store.name";
 	private static final String COUNT_ID = "count";
 	private static final String DATE_ID = "date";
+	private static final int PAGE_SIZE = 15;
 
 	private MainApp mainApp;
 	private Stage primaryStage;
@@ -248,19 +247,24 @@ public class MainController {
 				}
 			}
 		});
-		searchTextField.textProperty().addListener((observableValue, s, s2) -> new Thread(fillContainerTableTask(0)).start());
+		searchTextField.textProperty().addListener((observableValue, s, s2) -> {
+			if(s2.length() >= 3 || s2.isEmpty()) {
+				new Thread(fillContainerTableTask(0)).start();
+			}
+		});
 		counterTableView.setOnMouseClicked(event -> selectedCounter = counterTableView.getSelectionModel().getSelectedItem());
 		counterTableView.setOnSort(event -> {
 			if(event.getSource().getSortOrder().size() == 1 && COUNT_ID.equals(event.getSource().getSortOrder().get(0).getId())) {
 				return;
 			}
-			new Thread(fillContainerTableTask(0)).start();});
+			new Thread(fillContainerTableTask(0)).start();
+		});
 	}
 
 	private void initializeGoods() {
-		goodsName.getEditor().focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
-			if(aBoolean2) {
-				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(goodsName.getValue()));
+		goodsName.getEditor().textProperty().addListener((observableValue, old, newVal) -> {
+			if(newVal != null && (newVal.length() >= 3 || newVal.isEmpty())) {
+				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(newVal, new PageRequest(0, 15)));
 				ObservableList<String> goodNames = FXCollections.observableArrayList();
 				goodNames.addAll(goodsList1.stream().map(Goods::getName).collect(Collectors.toList()));
 				goodsName.setItems(goodNames);
@@ -379,7 +383,7 @@ public class MainController {
 		if(mainTabPane.getSelectionModel().getSelectedItem().equals(goodsTab)) {
 			log.debug("Load GOODS...");
 			goodsList.clear();
-			Pageable pageable = new PageRequest(0, 100, new Sort(Sort.Direction.ASC, "id"));
+			Pageable pageable = new PageRequest(0, PAGE_SIZE, new Sort(Sort.Direction.ASC, "id"));
 			Page<Goods> goodsPage = goodsService.getGoodsPage(pageable);
 			List<Goods> goods = new ArrayList<>(goodsPage.getContent());
 			goodsList = FXCollections.observableList(goods);
@@ -397,10 +401,10 @@ public class MainController {
 		ScrollBar bar = getVerticalScrollbar(goodsTable);
 		if(value == bar.getMax()) {
 			System.out.println("Adding new persons.");
-			int page = goodsList.size() / 100;
+			int page = goodsList.size() / PAGE_SIZE;
 			double targetValue = value * goodsList.size();
 
-			Pageable pageable = new PageRequest(page, 100, new Sort(Sort.Direction.ASC, "id"));
+			Pageable pageable = new PageRequest(page, PAGE_SIZE, new Sort(Sort.Direction.ASC, "id"));
 			Page<Goods> goodsPage = goodsService.getGoodsPage(pageable);
 			List<Goods> goods = new ArrayList<>(goodsPage.getContent());
 			goodsList.addAll(FXCollections.observableList(goods));
@@ -445,7 +449,7 @@ public class MainController {
 		log.debug("Scrolled to {}", value);
 		ScrollBar bar = getVerticalScrollbar(counterTableView);
 		if(value == bar.getMax()) {
-			int page = goodsFullList.size() / 100;
+			int page = goodsFullList.size() / PAGE_SIZE;
 			double targetValue = value * goodsFullList.size();
 			fillContainerTable(page);
 			bar.setValue(targetValue / goodsFullList.size());
@@ -478,7 +482,7 @@ public class MainController {
 			}
 		}
 
-		Pageable pageable = new PageRequest(page, 100, sort);
+		Pageable pageable = new PageRequest(page, PAGE_SIZE, sort);
 		String container = containerChoice.getValue();
 		List<Counter> counters = new ArrayList<>();
 		if(analogsMode || StringUtils.isNoneEmpty(searchTextField.getText())) {
@@ -487,14 +491,15 @@ public class MainController {
 				log.info("Analogs called...");
 				Platform.runLater(() -> stateLabel.setText("Аналоги для " + selectedCounter.getGoods().getName()));
 				goods.addAll(goodsService.getGoodsAnalogs(selectedCounter.getGoods()));
+				findCountersByGoods(goods, counters, pageable);
 			} else {
-				goods.addAll(goodsService.searchGoods(searchTextField.getText()));
-				if(goods.isEmpty()) {
-					counterTableView.setDisable(false);
-					return true;
+				if(ALL_STORES.equals(containerChoice.getValue())) {
+					counters.addAll(counterService.getCountersByGoods(searchTextField.getText(), pageable).getContent());
+				} else {
+					Store store = storeService.getStoreByName(containerChoice.getValue());
+					counters.addAll(counterService.getCountersByGoodsAndStore(searchTextField.getText(), store, pageable).getContent());
 				}
 			}
-			findCountersByGoods(goods, counters, pageable);
 		} else {
 			log.info("Base mode...");
 			stateLabel.setText("");
@@ -514,6 +519,7 @@ public class MainController {
 	private Task<Boolean> fillContainerTableTask(int page) {
 		addProgressIndicator(tableStackPane, counterTableView);
 		return new Task<Boolean>() {
+
 			@Override
 			protected Boolean call() throws Exception {
 				boolean result = fillContainerTable(page);

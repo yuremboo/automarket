@@ -24,4 +24,8 @@ public interface CounterService {
 	Page<Counter> searchCountersByGoodsAndStore(List<Goods> goods, Store store, Pageable pageable);
 
 	Page<Counter> getCountersPage(Pageable pageable);
+
+	Page<Counter> getCountersByGoods(String searchTerm, Pageable pageable);
+
+	Page<Counter> getCountersByGoodsAndStore(String searchTerm, Store store, Pageable pageable);
 }

@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
@@ -68,14 +69,17 @@ public class CounterEditDialogController {
 	private void initialize() {
 		log.debug("Edit counters initialization");
 		storeNames.addAll(storeService.getAllStoresNames());
-		goodNames.addAll(goodsService.getAllGoodsNames());
+		//goodNames.addAll(goodsService.getAllGoodsNames());
 		containerChoice.setItems(storeNames);
 		containerChoice.setValue(storeService.getDefault().getName());
-		goodsBox.setItems(goodNames);
+		//goodsBox.setItems(goodNames);
 
-		goodsBox.getEditor().focusedProperty().addListener((observableValue, aBoolean1, aBoolean2) -> {
-			if(aBoolean2) {
-				searchGoods(goodsBox.getValue());
+		goodsBox.getEditor().textProperty().addListener((observableValue, old, newVal) -> {
+			if(newVal != null && (newVal.length() > 3 || newVal.isEmpty())) {
+				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(newVal, new PageRequest(0, 15)));
+				ObservableList<String> goodNames = FXCollections.observableArrayList();
+				goodNames.addAll(goodsList1.stream().map(Goods::getName).collect(Collectors.toList()));
+				goodsBox.setItems(goodNames);
 				new AutoCompleteComboBoxListener<>(goodsBox);
 			}
 		});
@@ -176,7 +180,7 @@ public class CounterEditDialogController {
 	}
 
 	private void searchGoods(String s) {
-		List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(s));
+		List<Goods> goodsList = new ArrayList<>(goodsService.searchGoods(s, new PageRequest(0, 15)));
 		goodNames.clear();
 		goodNames.addAll(goodsList.stream().map(Goods::getName).collect(Collectors.toList()));
 		goodsBox.setItems(goodNames);
