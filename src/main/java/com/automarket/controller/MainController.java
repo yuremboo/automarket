@@ -13,6 +13,8 @@ import com.automarket.utils.GoodsDTO;
 import com.automarket.utils.Validator;
 import com.automarket.utils.WorkWithExcel;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -27,6 +29,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -40,6 +43,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -70,6 +74,12 @@ public class MainController {
 
 	private static final Logger log = LoggerFactory.getLogger(MainController.class);
 	private static final String ALL_STORES = "Всі";
+	private static final String TABLE_PROGRESS_INDICATOR = "tableProgressIndicator";
+	private static final String GOODS_NAME_ID = "goods.name";
+	private static final String STORE_NAME_ID = "store.name";
+	private static final String COUNT_ID = "count";
+	private static final String DATE_ID = "date";
+	private static final int PAGE_SIZE = 15;
 
 	private MainApp mainApp;
 	private Stage primaryStage;
@@ -98,6 +108,8 @@ public class MainController {
 	private Label stateLabel;
 	@FXML
 	private TextField goodsCount;
+	@FXML
+	private TextField goodsPrice;
 	@FXML
 	private TableView<Goods> goodsTable;
 	@FXML
@@ -130,6 +142,8 @@ public class MainController {
 	private TableColumn<Counter, String> goodsCounterColumnContainer;
 	@FXML
 	private TableColumn<Counter, Integer> goodsCounterColumnC;
+	@FXML
+	private TableColumn<Counter, Double> goodsCounterPriceColumn;
 	@FXML
 	private TableView<CommodityCirculation> reportTableView;
 	@FXML
@@ -164,6 +178,8 @@ public class MainController {
 	private TextField searchTextField;
 	@FXML
 	private Label statusLabel;
+	@FXML
+	private StackPane tableStackPane;
 
 	private final GoodsService goodsService;
 	private final CounterService counterService;
@@ -208,31 +224,47 @@ public class MainController {
 		initializeGoods();
 		initReportTable();
 		initCounterTable();
+		progressBar.setVisible(false);
+		progressIndicator.setVisible(false);
 	}
 
 	private void initCounterTable() {
 		counterTableView.setOnKeyPressed(event -> {
 			selectedCounter = counterTableView.getSelectionModel().getSelectedItem();
-			Goods selectedGoods = selectedCounter.getGoods();
-			if(event.getCode() == KeyCode.SPACE) {
-				if(selectedGoods != null) {
-					goodsName.setValue(selectedGoods.getName());
-					storeChoise.setValue(counterTableView.getSelectionModel().getSelectedItem().getStoreName());
-					selectionModel.select(salesTab);
+			if(selectedCounter != null) {
+				Goods selectedGoods = selectedCounter.getGoods();
+				if(event.getCode() == KeyCode.SPACE) {
+					if(selectedGoods != null) {
+						goodsName.setValue(selectedGoods.getName());
+						storeChoise.setValue(counterTableView.getSelectionModel().getSelectedItem().getStoreName());
+						String priceString = selectedGoods.getPrice() == null ? "" : String.valueOf(selectedGoods.getPrice());
+						goodsPrice.setText(priceString);
+						selectionModel.select(salesTab);
+					}
+				} else if(event.getCode() == KeyCode.A) {
+					analogsMode = !analogsMode;
+					new Thread(fillContainerTableTask(0)).start();
 				}
-			} else if(event.getCode() == KeyCode.A) {
-				analogsMode = !analogsMode;
-				fillContainerTable(0);
 			}
 		});
-		searchTextField.textProperty().addListener((observableValue, s, s2) -> fillContainerTable(0));
+		searchTextField.textProperty().addListener((observableValue, s, s2) -> {
+			if(s2.length() >= 3 || s2.isEmpty()) {
+				new Thread(fillContainerTableTask(0)).start();
+			}
+		});
 		counterTableView.setOnMouseClicked(event -> selectedCounter = counterTableView.getSelectionModel().getSelectedItem());
+		counterTableView.setOnSort(event -> {
+			if(event.getSource().getSortOrder().size() == 1 && COUNT_ID.equals(event.getSource().getSortOrder().get(0).getId())) {
+				return;
+			}
+			new Thread(fillContainerTableTask(0)).start();
+		});
 	}
 
 	private void initializeGoods() {
-		goodsName.getEditor().focusedProperty().addListener((observableValue, aBoolean, aBoolean2) -> {
-			if(aBoolean2) {
-				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(goodsName.getValue()));
+		goodsName.getEditor().textProperty().addListener((observableValue, old, newVal) -> {
+			if(newVal != null && (newVal.length() >= 3 || newVal.isEmpty())) {
+				List<Goods> goodsList1 = new ArrayList<>(goodsService.searchGoods(newVal, new PageRequest(0, 15)));
 				ObservableList<String> goodNames = FXCollections.observableArrayList();
 				goodNames.addAll(goodsList1.stream().map(Goods::getName).collect(Collectors.toList()));
 				goodsName.setItems(goodNames);
@@ -255,7 +287,8 @@ public class MainController {
 			containerChoice.setValue(ALL_STORES);
 		}
 		storeFilterChoice.setItems(storesList);
-		containerChoice.getSelectionModel().selectedItemProperty().addListener((observableValue, s, s2) -> fillContainerTable(0));
+		containerChoice.getSelectionModel().selectedItemProperty()
+				.addListener((observableValue, s, s2) -> new Thread(fillContainerTableTask(0)).start());
 	}
 
 	private void initializeDatePickers() {
@@ -295,8 +328,10 @@ public class MainController {
 		}
 		String goodsNameStr = goodsName.getValue();
 		int count;
+		Double price;
 		try {
 			count = Integer.parseInt(goodsCount.getText());
+			price = StringUtils.isBlank(goodsPrice.getText()) ? null : Double.valueOf(goodsPrice.getText());
 		} catch(Exception e) {
 			log.error(e.getMessage());
 			countValidLabel.setText("Введіть число!");
@@ -313,7 +348,7 @@ public class MainController {
 		int countLeft;
 		infoLabel.setText(goods.toString());
 		try {
-			countLeft = counterService.sale(goods, store, count);
+			countLeft = counterService.sale(goods, store, count, price);
 		} catch(RuntimeException e) {
 			infoLabel.setText("Не вистачає кількості одиниць товару для продажу! Або виникла непередбачувана помилка.");
 			return;
@@ -348,7 +383,7 @@ public class MainController {
 		if(mainTabPane.getSelectionModel().getSelectedItem().equals(goodsTab)) {
 			log.debug("Load GOODS...");
 			goodsList.clear();
-			Pageable pageable = new PageRequest(0, 100, new Sort(Sort.Direction.ASC, "id"));
+			Pageable pageable = new PageRequest(0, PAGE_SIZE, new Sort(Sort.Direction.ASC, "id"));
 			Page<Goods> goodsPage = goodsService.getGoodsPage(pageable);
 			List<Goods> goods = new ArrayList<>(goodsPage.getContent());
 			goodsList = FXCollections.observableList(goods);
@@ -366,10 +401,10 @@ public class MainController {
 		ScrollBar bar = getVerticalScrollbar(goodsTable);
 		if(value == bar.getMax()) {
 			System.out.println("Adding new persons.");
-			int page = goodsList.size() / 100;
+			int page = goodsList.size() / PAGE_SIZE;
 			double targetValue = value * goodsList.size();
 
-			Pageable pageable = new PageRequest(page, 100, new Sort(Sort.Direction.ASC, "id"));
+			Pageable pageable = new PageRequest(page, PAGE_SIZE, new Sort(Sort.Direction.ASC, "id"));
 			Page<Goods> goodsPage = goodsService.getGoodsPage(pageable);
 			List<Goods> goods = new ArrayList<>(goodsPage.getContent());
 			goodsList.addAll(FXCollections.observableList(goods));
@@ -405,7 +440,7 @@ public class MainController {
 			stateLabel.setText("");
 			ScrollBar bar = getVerticalScrollbar(counterTableView);
 			bar.valueProperty().addListener(this::scrolledCounters);
-			fillContainerTable(0);
+			new Thread(fillContainerTableTask(0)).start();
 		}
 	}
 
@@ -414,33 +449,57 @@ public class MainController {
 		log.debug("Scrolled to {}", value);
 		ScrollBar bar = getVerticalScrollbar(counterTableView);
 		if(value == bar.getMax()) {
-			int page = goodsFullList.size() / 100;
+			int page = goodsFullList.size() / PAGE_SIZE;
 			double targetValue = value * goodsFullList.size();
 			fillContainerTable(page);
 			bar.setValue(targetValue / goodsFullList.size());
 		}
 	}
 
-	private void fillContainerTable(int page) {
+	private boolean fillContainerTable(int page) {
+		Platform.runLater(() -> stateLabel.setText(""));
 		if(page == 0) {
 			goodsFullList.clear();
 		}
-		Pageable pageable = new PageRequest(page, 100, new Sort(Sort.Direction.ASC, "id"));
+		ObservableList<TableColumn<Counter, ?>> sortOrder = counterTableView.getSortOrder();
+		Sort sort = null;
+		for(TableColumn tableColumn : sortOrder) {
+			Sort.Direction direction = Sort.Direction.ASC;
+			TableColumn.SortType sortType = tableColumn.getSortType();
+			String sortColumn = "id";
+			if(GOODS_NAME_ID.equals(tableColumn.getId())) {
+				sortColumn = "goods.name";
+			} else if(STORE_NAME_ID.equals(tableColumn.getId())) {
+				sortColumn = "store.name";
+			}
+			if(sortType == TableColumn.SortType.DESCENDING) {
+				direction = Sort.Direction.DESC;
+			}
+			if(sort == null) {
+				sort = new Sort(direction, sortColumn);
+			} else {
+				sort.and(new Sort(direction, sortColumn));
+			}
+		}
+
+		Pageable pageable = new PageRequest(page, PAGE_SIZE, sort);
 		String container = containerChoice.getValue();
 		List<Counter> counters = new ArrayList<>();
 		if(analogsMode || StringUtils.isNoneEmpty(searchTextField.getText())) {
 			List<Goods> goods = new ArrayList<>();
 			if(analogsMode) {
 				log.info("Analogs called...");
-				stateLabel.setText("Аналоги для " + selectedCounter.getGoods().getName());
+				Platform.runLater(() -> stateLabel.setText("Аналоги для " + selectedCounter.getGoods().getName()));
 				goods.addAll(goodsService.getGoodsAnalogs(selectedCounter.getGoods()));
+				findCountersByGoods(goods, counters, pageable);
 			} else {
-				goods.addAll(goodsService.searchGoods(searchTextField.getText()));
-				if(goods.isEmpty()) {
-					return;
+				if(ALL_STORES.equals(containerChoice.getValue())) {
+					counters.addAll(counterService.getCountersByGoods(searchTextField.getText(), pageable).getContent());
+				} else {
+					Store store = storeService.getStoreByName(containerChoice.getValue());
+					counters.addAll(counterService.getCountersByGoodsAndStore(searchTextField.getText(), store, pageable).getContent());
 				}
 			}
-			findCountersByGoods(goods, counters, pageable);
 		} else {
 			log.info("Base mode...");
 			stateLabel.setText("");
@@ -453,12 +512,44 @@ public class MainController {
 		}
 		goodsFullList.addAll(counters);
 		counterTableView.setItems(goodsFullList);
+		counterTableView.setDisable(false);
+		return true;
+	}
+
+	private Task<Boolean> fillContainerTableTask(int page) {
+		addProgressIndicator(tableStackPane, counterTableView);
+		return new Task<Boolean>() {
+
+			@Override
+			protected Boolean call() throws Exception {
+				boolean result = fillContainerTable(page);
+				Platform.runLater(() -> removeProgressIndicator(tableStackPane));
+				return result;
+			}
+		};
+	}
+
+	private void addProgressIndicator(StackPane pane, Control controlToDisable) {
+		ProgressIndicator pi = new ProgressIndicator();
+		pi.setMaxHeight(40);
+		pi.setId(TABLE_PROGRESS_INDICATOR);
+		controlToDisable.setDisable(true);
+		pane.getChildren().add(pi);
+	}
+
+	private void removeProgressIndicator(StackPane pane) {
+		pane.getChildren().removeIf(node -> TABLE_PROGRESS_INDICATOR.equals(node.getId()));
 	}
 
 	private void initCounterTableFields() {
-		goodsCounterColumnName.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
-		goodsCounterColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
-		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<>("count"));
+		goodsCounterColumnName.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getGoods().getName()));
+		goodsCounterColumnName.setId(GOODS_NAME_ID);
+		goodsCounterColumnContainer.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getStore().getName()));
+		goodsCounterColumnContainer.setId(STORE_NAME_ID);
+		goodsCounterColumnC.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
+		goodsCounterColumnC.setId(COUNT_ID);
+		goodsCounterPriceColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getGoods().getPrice()));
+		goodsCounterPriceColumn.setId("goods.price");
 		counterTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
 
@@ -481,9 +572,9 @@ public class MainController {
 	}
 
 	private void initCommodityTable() {
-		commodityCirculationColumnName.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
-		commodityCirculationColumnCount.setCellValueFactory(new PropertyValueFactory<>("count"));
-		commodityCirculationColumnContainer.setCellValueFactory(new PropertyValueFactory<>("storeName"));
+		commodityCirculationColumnName.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getGoods().getName()));
+		commodityCirculationColumnCount.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
+		commodityCirculationColumnContainer.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getStore().getName()));
 		commodityCirculationTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	}
 
@@ -509,7 +600,7 @@ public class MainController {
 	protected void showAddGoodsStage() {
 		boolean okClicked = mainApp.showCounterEditDialog(analogsMode, selectedCounter);
 		if(okClicked) {
-			fillContainerTable(0);
+			new Thread(fillContainerTableTask(0)).start();
 		}
 	}
 
@@ -607,10 +698,10 @@ public class MainController {
 	}
 
 	private void initReportTable() {
-		goodsReportColumn.setCellValueFactory(new PropertyValueFactory<>("goodsName"));
-		countReportColumn.setCellValueFactory(new PropertyValueFactory<>("count"));
-		storeReportColumn.setCellValueFactory(new PropertyValueFactory<>("storeName"));
-		dateReportColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+		goodsReportColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getGoods().getName()));
+		countReportColumn.setCellValueFactory(new PropertyValueFactory<>(COUNT_ID));
+		storeReportColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getStore().getName()));
+		dateReportColumn.setCellValueFactory(new PropertyValueFactory<>(DATE_ID));
 		saleReportColumn.setCellValueFactory(new PropertyValueFactory<>("saleProp"));
 
 		reportTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -729,7 +820,7 @@ public class MainController {
 	protected void showCopyright() {
 		String s = System.getProperty("line.separator");
 		showInformationDialog(primaryStage, "Про програму", "Програма для ведення обліку товару." + s + "Розробник Юрій Михалецький" + s
-				+ "email:yurik.my@gmail.com" + s + "All rights reserved © Yurembo 2014.");
+				+ "email:yurik.my@gmail.com" + s + "All rights reserved © Yurembo 2014-2017.");
 	}
 
 	private Task importCounters(final File file) {
@@ -737,6 +828,8 @@ public class MainController {
 
 			@Override
 			protected Object call() throws Exception {
+				progressBar.setVisible(true);
+				progressIndicator.setVisible(true);
 				updateProgress(0, 1);
 				if(file != null) {
 					updateMessage("Зчитування файлу...");
@@ -751,6 +844,12 @@ public class MainController {
 						if(goodsDTO.getName() == null || goodsDTO.getName().trim().isEmpty()) {
 							continue;
 						}
+						Store store = storeCache.get(goodsDTO.getStore());
+						if(store == null) {
+							store = storeService.getStoreByName(goodsDTO.getStore());
+							storeCache.put(goodsDTO.getStore(), store);
+						}
+						Counter counter = null;
 						Goods goods = goodsService.getGoodsByName(goodsDTO.getName());
 						if(goods == null) {
 							goods = new Goods();
@@ -758,17 +857,15 @@ public class MainController {
 							goods.setDescription(goodsDTO.getDescription());
 							goods.setAnalogousType(goodsDTO.getAnalogousType());
 							goodsService.addGoods(goods);
+						} else {
+							counter = counterService.getCounterByGoodsStore(goods, store);
 						}
 
-						Store store = storeCache.get(goodsDTO.getStore());
-						if(store == null) {
-							store = storeService.getStoreByName(goodsDTO.getStore());
-							storeCache.put(goodsDTO.getStore(), store);
-						}
-
-						Counter counter = counterService.getCounterByGoodsStore(goods, store);
 						if(counter == null) {
 							counter = new Counter();
+						}
+						if(goodsDTO.getCount() == null) {
+							goodsDTO.setCount(0);
 						}
 						counter.setCount(counter.getCount() + goodsDTO.getCount());
 						counter.setGoods(goods);
@@ -782,7 +879,9 @@ public class MainController {
 						circulation.setGoods(goods);
 						circulation.setStore(store);
 						circulation.setSale(false);
+						circulationsService.addCirculation(circulation);
 						updateProgress(++i, data.size());
+						updateMessage("Завантаження тоару..." + i + "/" + data.size());
 					}
 					updateMessage("Виведення таблиці...");
 				}
@@ -792,16 +891,18 @@ public class MainController {
 				exportCount.setDisable(false);
 				addCount.setDisable(false);
 				updateMessage("");
+				progressBar.setVisible(false);
+				progressIndicator.setVisible(false);
 				return true;
 			}
 		};
 	}
 
 	private void findCountersByGoods(List<Goods> goods, List<Counter> counters, Pageable pageable) {
-		if(ALL_STORES.equals(storeChoise.getValue())) {
+		if(ALL_STORES.equals(containerChoice.getValue())) {
 			counters.addAll(counterService.searchCountersByGoods(goods, pageable).getContent());
 		} else {
-			Store store = storeService.getStoreByName(storeChoise.getValue());
+			Store store = storeService.getStoreByName(containerChoice.getValue());
 			counters.addAll(counterService.searchCountersByGoodsAndStore(goods, store, pageable).getContent());
 		}
 	}

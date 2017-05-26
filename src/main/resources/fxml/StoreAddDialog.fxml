@@ -19,7 +19,7 @@
         <TextField fx:id="storeNameField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
         <TextField fx:id="storeDescField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <CheckBox fx:id="storeIsDefaultField" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Label text="Label" GridPane.rowIndex="2" />
+            <Label text="По замовчуванню" GridPane.rowIndex="2" />
       </children>
       <columnConstraints>
         <ColumnConstraints fillWidth="true" hgrow="SOMETIMES" maxWidth="80.0" minWidth="80.0" prefWidth="80.0" />

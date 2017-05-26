@@ -12,33 +12,45 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane id="rootPane" prefHeight="232.0" prefWidth="321.0" styleClass="panel" xmlns="http://javafx.com/javafx/8.0.112-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.automarket.controller.CounterEditDialogController">
-  <children>
-    <GridPane layoutX="10.0" layoutY="50.0" prefHeight="133.0" prefWidth="301.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="50.0">
-      <children>
-        <Label text="Товар" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-        <Label text="Кількість" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-        <TextField fx:id="countField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" /><Label text="Контейнер" GridPane.rowIndex="1" /><ChoiceBox fx:id="containerChoice" prefHeight="25.0" prefWidth="222.0" GridPane.columnIndex="1" GridPane.rowIndex="1" /><ComboBox fx:id="goodsBox" editable="true" prefHeight="25.0" prefWidth="186.0" GridPane.columnIndex="1" />
-      </children>
-      <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" maxWidth="114.0" minWidth="80.0" prefWidth="114.0" />
-        <ColumnConstraints hgrow="SOMETIMES" maxWidth="231.0" minWidth="10.0" prefWidth="187.0" />
-      </columnConstraints>
-      <rowConstraints>
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-<RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-      </rowConstraints>
-    </GridPane>
-    <HBox id="HBox" alignment="CENTER" minWidth="-1.0" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
-      <children>
-        <Button mnemonicParsing="false" onAction="#handleOk" prefWidth="80.0" text="OK" />
-        <Button mnemonicParsing="false" onAction="#handleCancel" prefWidth="80.0" text="Cancel" />
-      </children>
-    </HBox>
-      <Label fx:id="stateLabel" layoutX="14.0" layoutY="14.0" prefHeight="17.0" prefWidth="295.0" />
-  </children>
+<AnchorPane id="rootPane" prefHeight="277.0" prefWidth="321.0" styleClass="panel"
+            xmlns="http://javafx.com/javafx/8.0.112-ea" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.automarket.controller.CounterEditDialogController">
+    <children>
+        <GridPane layoutX="10.0" layoutY="50.0" prefHeight="179.0" prefWidth="301.0" AnchorPane.leftAnchor="10.0"
+                  AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="50.0">
+            <children>
+                <Label text="Товар" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Label text="Ціна" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Label text="Кількість" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <Label text="Контейнер" GridPane.rowIndex="3"/>
+                <ComboBox fx:id="goodsBox" editable="true" prefHeight="25.0" prefWidth="186.0" GridPane.columnIndex="1"
+                          GridPane.rowIndex="0"/>
+                <TextField fx:id="countField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <TextField fx:id="priceField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <ChoiceBox fx:id="containerChoice" prefHeight="25.0" prefWidth="222.0" GridPane.columnIndex="1"
+                           GridPane.rowIndex="3"/>
+            </children>
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="114.0" minWidth="80.0" prefWidth="114.0"/>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="231.0" minWidth="10.0" prefWidth="187.0"/>
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+            </rowConstraints>
+        </GridPane>
+        <HBox id="HBox" alignment="CENTER" minWidth="-1.0" spacing="5.0" AnchorPane.bottomAnchor="10.0"
+              AnchorPane.rightAnchor="10.0">
+            <children>
+                <Button mnemonicParsing="false" onAction="#handleOk" prefWidth="80.0" text="OK"/>
+                <Button mnemonicParsing="false" onAction="#handleCancel" prefWidth="80.0" text="Cancel"/>
+            </children>
+        </HBox>
+        <Label fx:id="stateLabel" layoutX="14.0" layoutY="14.0" prefHeight="17.0" prefWidth="295.0"/>
+    </children>
     <stylesheets>
-        <URL value="@../styles/styles.css" />
+        <URL value="@../styles/styles.css"/>
     </stylesheets>
 </AnchorPane>

@@ -29,6 +29,7 @@ public class Goods implements Serializable {
 	private String name;
 	private String description;
 	private Integer analogousType;
+	private Double price;
 	private Set<Counter> counters = new HashSet<>();
 	private Set<CommodityCirculation> commodityCirculations = new HashSet<>();
 
@@ -97,6 +98,15 @@ public class Goods implements Serializable {
 
 	public void setAnalogousType(Integer analogousType) {
 		this.analogousType = analogousType;
+	}
+
+	@Column(name = "price")
+	public Double getPrice() {
+		return price;
+	}
+
+	public void setPrice(Double price) {
+		this.price = price;
 	}
 
 	@Transient

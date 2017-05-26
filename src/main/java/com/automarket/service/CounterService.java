@@ -17,11 +17,15 @@ public interface CounterService {
     Page<Counter> searchCountersByGoods(List<Goods> goodsList, Pageable pageable);
     Page<Counter> getCountersListByStore(Store store, Pageable pageable);
     List<Counter> getCountersListByStore(Store store);
-	int sale(Goods goods, Store store, int count);
+	int sale(Goods goods, Store store, int count, Double price);
     Counter addOrUpdateCounter(Counter counter);
     void addOrUpdateCounterList(List<Counter> counterList);
 
 	Page<Counter> searchCountersByGoodsAndStore(List<Goods> goods, Store store, Pageable pageable);
 
 	Page<Counter> getCountersPage(Pageable pageable);
+
+	Page<Counter> getCountersByGoods(String searchTerm, Pageable pageable);
+
+	Page<Counter> getCountersByGoodsAndStore(String searchTerm, Store store, Pageable pageable);
 }
