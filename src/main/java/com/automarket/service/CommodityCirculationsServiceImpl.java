@@ -63,12 +63,16 @@ public class CommodityCirculationsServiceImpl implements CommodityCirculationsSe
 
 	@Override
 	public List<CommodityCirculation> getTodaySales() {
-		//TODO: change to LocalDateTime java 8
+		//TODO: change to LocalDateTime java 8 1!!!
 		Calendar startDate = Calendar.getInstance();
 		Calendar endDate = Calendar.getInstance();
 		startDate.set(Calendar.HOUR_OF_DAY, 0);
-		startDate.set(Calendar.MINUTE, 0);
-		startDate.set(Calendar.SECOND, 0);
+		startDate.set(Calendar.MINUTE, 10);
+		startDate.set(Calendar.SECOND, 10);
 		return commodityCirculationJpaRepository.findAllByDateBetweenAndSale(startDate.getTime(), endDate.getTime(), true);
+	}
+
+	public void someMethod(int[] a ) {
+		System.out.println("hello");
 	}
 }
