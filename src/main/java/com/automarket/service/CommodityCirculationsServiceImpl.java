@@ -71,4 +71,8 @@ public class CommodityCirculationsServiceImpl implements CommodityCirculationsSe
 		startDate.set(Calendar.SECOND, 0);
 		return commodityCirculationJpaRepository.findAllByDateBetweenAndSale(startDate.getTime(), endDate.getTime(), true);
 	}
+
+	public void someMethod(int[] a ) {
+		System.out.println("hello");
+	}
 }
