@@ -1,5 +1,6 @@
 package com.automarket.service;
 
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -64,6 +65,8 @@ public class CommodityCirculationsServiceImpl implements CommodityCirculationsSe
 	@Override
 	public List<CommodityCirculation> getTodaySales() {
 		//TODO: change to LocalDateTime java 8
+		final LocalDateTime now = LocalDateTime.now();
+		final LocalDateTime later = LocalDateTime.now();
 		Calendar startDate = Calendar.getInstance();
 		Calendar endDate = Calendar.getInstance();
 		startDate.set(Calendar.HOUR_OF_DAY, 0);
